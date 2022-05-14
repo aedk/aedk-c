@@ -25,7 +25,7 @@ struct $__DL_Context__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{in
 
 
 
-DLContext* gfDLCtx_Create           (wchar_t* iBuffer, int iBufferLength, bool iIsComplete)
+DLContext* gfDLCtx_Create           (wchar_t* iBuffer, size_t iBufferLength, bool iIsComplete)
 {
 	DLContext* oDLC = malloc(sizeof(DLContext));
 	{
@@ -467,7 +467,7 @@ void          gfLState_Destroy (LexerState* iState)
 }
 
 struct $__DL_LexerContext__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
-LexerContext* gfLexCtx_Create           (DLContext* iDLC, wchar_t* iBuffer, int iBufferLength)
+LexerContext* gfLexCtx_Create           (DLContext* iDLC, wchar_t* iBuffer, size_t iBufferLength)
 {
 	LexerContext* oCtx = malloc(sizeof(LexerContext));
 	{
@@ -1442,13 +1442,13 @@ void          gfLexCtx_ParseString      (LexerContext* iCtx)
 	while(_EndOffs < iCtx->BufferLength)
 	{
 		int cBegSearch = _EndOffs + (_IsStringOpen ? 0 : 1);
-		_EndOffs = cBegSearch + wcsindexof(&iCtx->Buffer[cBegSearch], iCtx->BufferLength - _EndOffs, L"\"",  1);
+		_EndOffs = cBegSearch + wcsindexof(&iCtx->Buffer[cBegSearch], (int)iCtx->BufferLength - _EndOffs, L"\"",  1);
 		
 		///_EndOffs = iCtx.Buffer.IndexOf('"', _EndOffs + (_IsStringOpen ? 0 : 1));
 
 		if(_EndOffs == -1)
 		{
-			_EndOffs = iCtx->BufferLength;
+			_EndOffs = (int)iCtx->BufferLength;
 			//_EndOffs = _BegOffs - 1; //~~ mark token as unterminated;
 
 			//_Is

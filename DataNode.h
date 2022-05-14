@@ -59,7 +59,7 @@ typedef enum DataNodeType
 	DN_T_Undefined,
 	DN_T_Element,
 	DN_T_Attribute,
-	
+	DN_T_Test,
 }
 DataNodeType;
 
@@ -91,16 +91,26 @@ typedef enum DataNodeValueType
 }
 DataNodeValueType;
 
-
+void                 gfDNChildren_Init     (DataNodeStruct* irParentNode);
 void                 gfDNChildren_Reserve  (DataNodeStruct* irParentNode, int iCapacity);
-DataNodeCollection*  gfDNChildren_Create   (int iCapacity);
-void                 gfDNChildren_Destroy  (DataNodeStruct* irParentNode);
 DataNodeStruct*      gfDNChildren_Allocate (DataNodeStruct* irParentNode, int iCount);
 DataNodeStruct*      gfDNChildren_Pop      (DataNodeStruct* irParentNode);
 DataNodeStruct*      gfDNChildren_Peek     (DataNodeStruct* irParentNode);
-void                 gfDNChildren_Reserve  (DataNodeStruct* irParentNode, int iCapacity);
 void                 gfDNChildren_Clear    (DataNodeStruct* irParentNode);
-void                 gfDNChildren_Init     (DataNodeStruct* irParentNode);
+
+//
+////DataNodeCollection*  gfDNChildren_Create   (int iCapacity);
+//void                 gfDNChildren_Destroy  (DataNodeStruct* irParentNode);
+
+void                 gfDNAttributes_Init     (DataNodeStruct* irParentNode);
+void                 gfDNAttributes_Reserve  (DataNodeStruct* irParentNode, int iCapacity);
+DataNodeStruct*      gfDNAttributes_Allocate (DataNodeStruct* irParentNode, int iCount);
+DataNodeStruct*      gfDNAttributes_Pop      (DataNodeStruct* irParentNode);
+DataNodeStruct*      gfDNAttributes_Peek     (DataNodeStruct* irParentNode);
+void                 gfDNAttributes_Clear    (DataNodeStruct* irParentNode);
+
+
+
 
 struct DataNodeStruct
 {
@@ -112,7 +122,8 @@ struct DataNodeStruct
 	DataNodeValueType ValueType;
 	
 	DataNodeStruct*   Parent;
-	DataNodeStruct*   Children; int ChildCount, ChildCapacity;
+	DataNodeStruct*   Attributes; int AttrCount, AttrCapacity;
+	DataNodeStruct*   Children;   int ChildCount, ChildCapacity;
 	
 	
 	#ifdef __cplusplus
@@ -151,8 +162,11 @@ void gfDataNode_GetPath (DataNodeStruct* iNode, wchar_t* oPath);
 
 
 
-void gfDataNode_FromDLSyntaxNode (DataNodeStruct* irNode, DLSyntaxNode* iSyntaxNode, DLContext* iDLC);
+void gfDataNode_FromDLSyntaxNode (DataNodeStruct* irNode, DLSyntaxNode* iSyntaxNode, DLContext* iDLC);///, DataNodeType iNodeType)
 void gfDataNode_ToDLSyntaxNode   (DataNodeStruct* iNode,  DLSyntaxNode* irSyntaxNode);
+DataNodeStruct* gfDataNode_FromString(wchar_t* iBuffer);
+int gfDataNode_ToString(DataNodeStruct* iNode, WString* irString, int iIndent);
+
 
 
 DataNodeStruct* gfDataNode_GetNodeByPath(DataNodeStruct* irNode, wchar_t* iPath, bool iDoAllowSubPath, bool iDoCreateMissing);
@@ -189,8 +203,6 @@ float    gfDataNode_GetValueF32Or (DataNodeStruct* iNode, wchar_t* iPath, float 
 
 ///int gfDataNode_ToString(DataNodeStruct* iNode, wchar_t** irBuffer, int iIndent);
 ///int gfDataNode_ToString(DataNodeStruct* iNode, wchar_t** irBuffer, int iBufferCapacity, int iBufferSize, int iIndent);
-int gfDataNode_ToString(DataNodeStruct* iNode, WString* irString, int iIndent);
-
 
 extern DataNodeStruct gDataNodeStruct_Null;
 
@@ -275,7 +287,8 @@ class DataNode
 	///static DataNode Null;
 	//void InitStatic();
 	
-	static void FromFile(wchar_t* iPath);
+	static DataNode* FromString (wchar_t* iString);
+	static DataNode* FromFile   (wchar_t* iPath);
 };
 //}
 

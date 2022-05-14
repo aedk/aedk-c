@@ -638,7 +638,12 @@ int DataNode::ToStringPreview(wchar_t** irBuffer)
 	HERE;
 	return oBufferLength;
 }
-void DataNode::FromFile(wchar_t* iPath)
+DataNode* DataNode::FromString(wchar_t* iString)
+{
+	DataNodeStruct* _Struct = gfDataNode_FromString(iString);
+	return new DataNode(_Struct);
+}
+DataNode* DataNode::FromFile(wchar_t* iPath)
 {
 	throw "NI";
 }

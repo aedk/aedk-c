@@ -52,7 +52,7 @@ struct DLContext
 	
 };
 
-DLContext* gfDLCtx_Create           (wchar_t* iBuffer, int iBufferLength, bool iIsComplete);
+DLContext* gfDLCtx_Create           (wchar_t* iBuffer, size_t iBufferLength, bool iIsComplete);
 void       gfDLCtx_Destroy          (DLContext* iDLC);
 
 
@@ -267,7 +267,7 @@ struct LexerContext
 {
 	DLContext*  DLC;
 	wchar_t*    Buffer;
-	int         BufferLength;
+	size_t      BufferLength;
 
 	DLTokenList*  Tokens;
 	LexerState*   State;
@@ -295,7 +295,7 @@ void         gfLState_Destroy     (LexerState* iState);
 
 
 
-LexerContext* gfLexCtx_Create           (DLContext* iDLCtx, wchar_t* iBuffer, int iBufferLength);
+LexerContext* gfLexCtx_Create           (DLContext* iDLCtx, wchar_t* iBuffer, size_t iBufferLength);
 void          gfLexCtx_Destroy          (LexerContext* iCtx);
 
 DLToken*      gfLexCtx_AllocateToken    (LexerContext* iCtx);
