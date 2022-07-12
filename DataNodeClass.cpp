@@ -1,5 +1,5 @@
 #include "DataNode.h"
-#include "AEDL.h"
+#include "UL.h"
 #include "AE.h"
 
 #include <stdlib.h>
@@ -581,13 +581,15 @@ DataNodeStruct::operator double   ()
 DataNodeStruct& DataNodeStruct::operator= (const DataNodeStruct& iNode)
 {
 	
-	this->ValueType = iNode.ValueType;
+	this->Value.Type = iNode.Value.Type;
 	
 
-	memcpy(&this->Value,iNode.Value, sizeof(this->Value) * sizeof(wchar_t));
-	///*((wchar_t*)&this->Value) = *(wchar_t*)iNode.Value;	
+
+	memcpy(&this->Value,&iNode.Value, sizeof(this->Value) * sizeof(wchar_t)); ///~~ need to copy 'pointed' contents;
+	///memcpy(&this->Value,iNode.Value, sizeof(this->Value) * sizeof(wchar_t));
 	
-	///this->Value = *(wchar_t*)&iNode.Value;
+	//*((wchar_t*)&this->Value) = *(wchar_t*)iNode.Value;
+	//this->Value = *(wchar_t*)&iNode.Value;
 	
 	return *this;
 }

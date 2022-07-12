@@ -40,13 +40,14 @@ int      gfWString_WriteLine  (WString* irString, wchar_t* iSrcBuffer, int iSrcL
 
 
 
+typedef struct DataNodeValue DataNodeValue;
 
 typedef struct DataNodeStruct DataNodeStruct;
 typedef struct DataNodeCollection DataNodeCollection;
 
-///typedef struct DLSyntaxNode;
-typedef struct DLContext DLContext;
-typedef struct DLSyntaxNode DLSyntaxNode;
+///typedef struct ULSyntaxNode;
+typedef struct ULContext ULContext;
+typedef struct ULSyntaxNode ULSyntaxNode;
 
 
 #define dDataNodeNameMaxLength 64
@@ -88,8 +89,12 @@ typedef enum DataNodeValueType
 	DN_VT_UInt64,
 	DN_VT_Float32,
 	DN_VT_Float64,
+	
+	DN_VT_ValueList,
 }
 DataNodeValueType;
+
+
 
 void                 gfDNChildren_Init     (DataNodeStruct* irParentNode);
 void                 gfDNChildren_Reserve  (DataNodeStruct* irParentNode, int iCapacity);
@@ -110,16 +115,23 @@ DataNodeStruct*      gfDNAttributes_Peek     (DataNodeStruct* irParentNode);
 void                 gfDNAttributes_Clear    (DataNodeStruct* irParentNode);
 
 
-
+struct DataNodeValue
+{
+	wchar_t Data[dDataNodeValueMaxLength];
+	DataNodeValueType Type;
+	
+	DataNodeValue* NextPtr;
+};
 
 struct DataNodeStruct
 {
 	wchar_t Name[dDataNodeNameMaxLength];
-	wchar_t Value[dDataNodeValueMaxLength];
+	///wchar_t Value[dDataNodeValueMaxLength];
 	
 	DataNodeType      Type;
 	DataNodeValueType NameType;
-	DataNodeValueType ValueType;
+	DataNodeValue     Value;
+	///DataNodeValueType ValueType;
 	
 	DataNodeStruct*   Parent;
 	DataNodeStruct*   Attributes; int AttrCount, AttrCapacity;
@@ -162,8 +174,8 @@ void gfDataNode_GetPath (DataNodeStruct* iNode, wchar_t* oPath);
 
 
 
-void gfDataNode_FromDLSyntaxNode (DataNodeStruct* irNode, DLSyntaxNode* iSyntaxNode, DLContext* iDLC);///, DataNodeType iNodeType)
-void gfDataNode_ToDLSyntaxNode   (DataNodeStruct* iNode,  DLSyntaxNode* irSyntaxNode);
+void gfDataNode_FromULSyntaxNode (DataNodeStruct* irNode, ULSyntaxNode* iSyntaxNode, ULContext* iULC);///, DataNodeType iNodeType)
+void gfDataNode_ToULSyntaxNode   (DataNodeStruct* iNode,  ULSyntaxNode* irSyntaxNode);
 DataNodeStruct* gfDataNode_FromString(wchar_t* iBuffer);
 int gfDataNode_ToString(DataNodeStruct* iNode, WString* irString, int iIndent);
 
