@@ -120,11 +120,12 @@ bool gfToken_IsZeroLength  (ULToken* iToken){return iToken->Length == 0;}
 bool gfToken_IsTerminated  (ULToken* iToken){return iToken->Length != -1;}
 bool gfToken_IsPaired      (ULTokenType iTokenType){return gfToken_IsOpener(iTokenType) || gfToken_IsCloser(iTokenType);}
 
-//bool gfToken_IsOpener      (ULTokenType iTokenType){return iTokenType == UL_TOK_Expression_Opener || iTokenType == UL_TOK_List_Opener || iTokenType == UL_TOK_ListItem_Opener || iTokenType == UL_TOK_Parenthesis_Opener || iTokenType == UL_TOK_Bracket_Opener || iTokenType == UL_TOK_Brace_Opener;}
-//bool gfToken_IsCloser      (ULTokenType iTokenType){return iTokenType == UL_TOK_Expression_Closer || iTokenType == UL_TOK_List_Closer || iTokenType == UL_TOK_ListItem_Closer || iTokenType == UL_TOK_Parenthesis_Closer || iTokenType == UL_TOK_Bracket_Closer || iTokenType == UL_TOK_Brace_Closer;}
+///bool gfToken_IsOpener      (ULTokenType iTokenType){return iTokenType == UL_TOK_ListItem_Opener || iTokenType == UL_TOK_List_Opener || iTokenType == UL_TOK_Expression_Opener || iTokenType == UL_TOK_Parenthesis_Opener || iTokenType == UL_TOK_Bracket_Opener || iTokenType == UL_TOK_Brace_Opener || iTokenType == UL_TOK_File_Opener;}
+///bool gfToken_IsCloser      (ULTokenType iTokenType){return iTokenType == UL_TOK_ListItem_Closer || iTokenType == UL_TOK_List_Closer || iTokenType == UL_TOK_Expression_Closer || iTokenType == UL_TOK_Parenthesis_Closer || iTokenType == UL_TOK_Bracket_Closer || iTokenType == UL_TOK_Brace_Closer || iTokenType == UL_TOK_File_Closer;}
 
-bool gfToken_IsOpener      (ULTokenType iTokenType){return iTokenType == UL_TOK_ListItem_Opener || iTokenType == UL_TOK_List_Opener || iTokenType == UL_TOK_Expression_Opener || iTokenType == UL_TOK_Parenthesis_Opener || iTokenType == UL_TOK_Bracket_Opener || iTokenType == UL_TOK_Brace_Opener || iTokenType == UL_TOK_File_Opener;}
-bool gfToken_IsCloser      (ULTokenType iTokenType){return iTokenType == UL_TOK_ListItem_Closer || iTokenType == UL_TOK_List_Closer || iTokenType == UL_TOK_Expression_Closer || iTokenType == UL_TOK_Parenthesis_Closer || iTokenType == UL_TOK_Bracket_Closer || iTokenType == UL_TOK_Brace_Closer || iTokenType == UL_TOK_File_Closer;}
+bool gfToken_IsOpener      (ULTokenType iTokenType){return (iTokenType >= UL_TOK_Root_Opener && iTokenType <= UL_TOK_ListItem_Opener) || iTokenType == UL_TOK_Brace_Opener || iTokenType == UL_TOK_Parenthesis_Opener || iTokenType == UL_TOK_Bracket_Opener;}
+bool gfToken_IsCloser      (ULTokenType iTokenType){return (iTokenType >= UL_TOK_Root_Closer && iTokenType <= UL_TOK_ListItem_Closer) || iTokenType == UL_TOK_Brace_Closer || iTokenType == UL_TOK_Parenthesis_Closer || iTokenType == UL_TOK_Bracket_Closer;}
+
 
 bool gfToken_IsWhitespace  (ULTokenType iTokenType){return iTokenType >= UL_TOK_Whitespace && iTokenType <= UL_TOK_NewLine;}
 
@@ -1069,21 +1070,21 @@ void          gfLexCtx_ParseNextTokens  (LexerContext* iCtx)
 					else if (cChar == L',')               gfLexCtx_AddToken(iCtx, UL_TOK_ListItem_Delimiter,   nullptr, -1,1);
 					else if (cChar == L'\'')              gfLexCtx_AddToken(iCtx, UL_TOK_Atom_Delimiter, nullptr, -1,1);
 
-					else if (cChar == L'$')
-					{
-						if(nChar == L'-' || nChar == L'+') /// $-1, $+2 etc
-						{
-							gfLexCtx_ParseList(iCtx);
-						}
-						//else if(gfLexCtx_IsLetter(nChar))
-						else if(iswalpha(nChar))
-						{
-							iswupper(nChar) ? gfLexCtx_ParseHostObject(iCtx) : gfLexCtx_ParseType(iCtx);
-						}
-						//else if(nChar == '-' || nChar == '+')
-						
-						else gfLexCtx_ParseHostObject(iCtx);
-					}
+					//else if (cChar == L'$')
+					//{
+					//	if(nChar == L'-' || nChar == L'+') /// $-1, $+2 etc
+					//	{
+					//		gfLexCtx_ParseList(iCtx);
+					//	}
+					//	//else if(gfLexCtx_IsLetter(nChar))
+					//	else if(iswalpha(nChar))
+					//	{
+					//		iswupper(nChar) ? gfLexCtx_ParseHostObject(iCtx) : gfLexCtx_ParseType(iCtx);
+					//	}
+					//	//else if(nChar == '-' || nChar == '+')
+					//	
+					//	else gfLexCtx_ParseHostObject(iCtx);
+					//}
 					else
 					{
 						if(iCtx->State->Position >= 295)
@@ -1228,71 +1229,77 @@ void          gfLexCtx_ParseNumber      (LexerContext* iCtx)
 	///string _ValueAsString = iCtx.Buffer.Substring(_BegOffs, _EndOffs - _BegOffs).ToLower();
 	gfLexCtx_AddToken(iCtx, UL_TOK_Number, nullptr, _BegOffs, _EndOffs); 
 }
-void          gfLexCtx_ParseHostObject  (LexerContext* iCtx)
-{
-	int _BegOffs = iCtx->State->Position;
-	int _EndOffs = _BegOffs + 1; while(_EndOffs < iCtx->BufferLength && gfLexCtx_IsIdentChar(iCtx->Buffer[_EndOffs])) _EndOffs ++;
-
-	gfLexCtx_AddToken(iCtx, UL_TOK_Host_Object, nullptr, _BegOffs, _EndOffs); 
-}
-void          gfLexCtx_ParseType        (LexerContext* iCtx)
-{
-	int _BegOffs = iCtx->State->Position;
-	int _EndOffs = _BegOffs + 1;
-
-
-
-	while(_EndOffs < iCtx->BufferLength)
-	{
-		wchar_t cChar = iCtx->Buffer[_EndOffs];
-		//    if(
-		
-		if((iswalpha(cChar) && iswlower(cChar)) || gfLexCtx_IsNumberChar(cChar)) _EndOffs ++;
-		else if(iswupper(cChar)) WTFE("?");
-		else break;
-	}
-	gfLexCtx_AddToken(iCtx, UL_TOK_Type, nullptr, _BegOffs, _EndOffs); 
-}
+//void          gfLexCtx_ParseHostObject  (LexerContext* iCtx)
+//{
+//	int _BegOffs = iCtx->State->Position;
+//	int _EndOffs = _BegOffs + 1; while(_EndOffs < iCtx->BufferLength && gfLexCtx_IsIdentChar(iCtx->Buffer[_EndOffs])) _EndOffs ++;
+//
+//	gfLexCtx_AddToken(iCtx, UL_TOK_Host_Object, nullptr, _BegOffs, _EndOffs); 
+//}
+//void          gfLexCtx_ParseType        (LexerContext* iCtx)
+//{
+//	int _BegOffs = iCtx->State->Position;
+//	int _EndOffs = _BegOffs + 1;
+//
+//
+//
+//	while(_EndOffs < iCtx->BufferLength)
+//	{
+//		wchar_t cChar = iCtx->Buffer[_EndOffs];
+//		//    if(
+//		
+//		if((iswalpha(cChar) && iswlower(cChar)) || gfLexCtx_IsNumberChar(cChar)) _EndOffs ++;
+//		else if(iswupper(cChar)) WTFE("?");
+//		else break;
+//	}
+//	gfLexCtx_AddToken(iCtx, UL_TOK_Type, nullptr, _BegOffs, _EndOffs); 
+//}
 void          gfLexCtx_ParseList        (LexerContext* iCtx)
 {
 	STOP;
 }
 void          gfLexCtx_ParseIdentifier  (LexerContext* iCtx)
 {
-	wchar_t* _Str; int _StrLen;
+	wchar_t* _Str; int _StrLen; int cCi;
 	ULTokenType _Type;
+	
 	
 	int _BegOffs = iCtx->State->Position;
 	int _EndOffs = _BegOffs + 1;
 	
-
-
-	while(_EndOffs < iCtx->BufferLength && gfLexCtx_IsIdentChar(iCtx->Buffer[_EndOffs])) _EndOffs ++;
 	
+	int _IsConvIdent = 0; for(cCi = 1 ;; cCi ++)
+	{
+		wchar_t cChar = iCtx->Buffer[_EndOffs];
+
+		if(_EndOffs >= iCtx->BufferLength || !gfLexCtx_IsIdentChar(cChar)) break;
+
+		if(_IsConvIdent == 0)
+		{
+			if((gfLexCtx_IsUpperCase(cChar) || gfLexCtx_IsDecimalDigit(cChar)) && cCi <= 2)
+			{
+				_IsConvIdent = +1;
+			}
+			else if(!gfLexCtx_IsLowerCase(cChar))
+			{
+				_IsConvIdent = -1;
+			}
+		}
+		_EndOffs ++;
+	}
+
 	_Str = &iCtx->Buffer[_BegOffs];///, _EndOffs - _BegOffs);
 	{
-		//wchar_t*  _1 = wcsstr(_Str,L"//");
-		//wchar_t*  _2 = wcsstr(_Str,L"/*");
 		int _1 = wcsindexof(_Str, _EndOffs - _BegOffs, L"//", 2);
 		int _2 = wcsindexof(_Str, _EndOffs - _BegOffs, L"/*", 2);
 
 		if      (_1 != -1) _EndOffs = _BegOffs + _1;
 		else if (_2 != -1) _EndOffs = _BegOffs + _2;
 
-
 		_StrLen = _EndOffs - _BegOffs;
-		///if(_1 != -1 || _2 != -1)
-		//{
-		///	_Str = iCtx.Buffer[_BegOffs];///, _EndOffs - _BegOffs);
-		//}
 	}
-
-	//iCtx.Offset = _EndOffs;
 	
-	//debugger;
-
-	//var _Str = iCtx.Buffer.Substring(_BegOffs, _EndOffs - _BegOffs);
-
+	iCtx->State->Position = _EndOffs;
 
 	_Type  = UL_TOK_Undefined;
 	{
@@ -1301,50 +1308,40 @@ void          gfLexCtx_ParseIdentifier  (LexerContext* iCtx)
 		wchar_t _FstChar        = _Str[0];
 		wchar_t _SndChar        = _IsMultiChar ? _Str[1] : L'X'; //??
 
-		bool _IsLinkedIdent  = _IsMultiChar && (_FstChar >= L'A' && _FstChar <= L'Z');
+		bool _IsLinkedIdent  = _IsMultiChar && gfLexCtx_IsUpperCase(_FstChar);
 
 
 		if(_IsLinkedIdent)
 		{
-			///_Type = TokenType.Identifier;
 			_Type = UL_TOK_Member_Ident;
 		}
 		else
 		{
-		/*	if(_FstChar == L'^')
-			{
-			
-			}*/
 			bool _IsFstLowC    = _FstChar >= L'a' && _FstChar <= L'z';
 			///var _IsFstPrefix = _FstChar == '_' || _FstChar == '@'|| _FstChar == '^';
 			
-			bool _IsSndUppC    = _IsMultiChar && (_SndChar >= L'A' && _SndChar <= L'Z');
-			bool _IsSndDigit   = _IsMultiChar && (_SndChar >= L'0' && _SndChar <= L'9');
+			//bool _IsSndUppC    = _IsMultiChar && gfLexCtx_IsUpperCase(_SndChar >= L'A' && _SndChar <= L'Z');
+			//bool _IsSndDigit   = _IsMultiChar && (_SndChar >= L'0' && _SndChar <= L'9');
 
-			bool _IsFollowingIdent = _IsSndUppC || _IsSndDigit;
-
-			//if(_FstChar == 'i' && _SndChar == 'o')
-			//{
+			/*bool _IsFollowingIdent = _IsSndUppC || _IsSndDigit;*/
+			bool _IsFollowingIdent = _IsConvIdent == +1;
 			
-			//}
-			bool _IsFstCharPfx = _FstChar == L'_' || _FstChar == L':' || _FstChar == L'^' || _IsFstLowC;///(_FstChar >= L'a' && _FstChar <= L'z');
+			bool _IsFstCharPfx = _FstChar == L'_' || _FstChar == L':' || _FstChar == L'^' || gfLexCtx_IsLowerCase(_FstChar);///(_FstChar >= L'a' && _FstChar <= L'z');
 
 
 			if (_IsFstCharPfx && _IsFollowingIdent) switch(_FstChar)
 			{
-				//case "_" :                       _Type = "LOCV"; break;
-				//case "c" : case "p" : case "n" : _Type = "CYCV"; break;
-				
-				case L'@' : _Type = UL_TOK_Instruction;    break;
-				case L':' : _Type = UL_TOK_Label;          break;
-				case L'^' : _Type = UL_TOK_Pointer;        break;
+				case L'@' : _Type = UL_TOK_Instruction;     break;
+				case L':' : _Type = UL_TOK_Label;           break;
+				case L'^' : _Type = UL_TOK_Pointer;         break;
 				case L'g' : _Type = UL_TOK_Global_Ident;    break;
-				///case L'f' : _Type = UL_TOK_FunctionIdent; break;
-				case L'r' : _Type = UL_TOK_Reference_Ident; break;
-				case L'i' : _Type = UL_TOK_Input_Ident;     break;
+				case L'i' : _Type = _SndChar == 'r'
+				                  ? UL_TOK_Reference_Ident
+				                  : UL_TOK_Input_Ident;
+				                                            break;
 				case L'o' : _Type = UL_TOK_Output_Ident;    break;
 
-				default  : _Type = UL_TOK_Local_Ident;     break;
+				default   : _Type = UL_TOK_Local_Ident;     break;
 			}
 			else
 			{
@@ -1525,7 +1522,9 @@ bool          gfLexCtx_IsNewline        (wchar_t iChar){return iChar == L'\r' ||
 bool          gfLexCtx_IsWhitespace     (wchar_t iChar){return iChar == L' ' || iChar == L'\t' || gfLexCtx_IsNewline(iChar);}
 bool          gfLexCtx_IsDecimalDigit   (wchar_t iChar){return iChar >= L'0' && iChar <= L'9';}
 bool          gfLexCtx_IsNumberChar     (wchar_t iChar){return !(gfLexCtx_IsWhitespace(iChar) || gfLexCtx_IsPunctuation(iChar) || gfLexCtx_IsBracket(iChar) || gfLexCtx_IsQuote(iChar));}
-bool          gfLexCtx_IsAlpha          (wchar_t iChar){return (iChar >= L'a' && iChar <= L'z') || (iChar >= L'A' && iChar <= L'Z') || iChar == L'_';}
+bool          gfLexCtx_IsAlpha          (wchar_t iChar){return gfLexCtx_IsUpperCase(iChar) || gfLexCtx_IsLowerCase(iChar) || iChar == L'_';}
+bool          gfLexCtx_IsUpperCase      (wchar_t iChar){return iChar >= L'A' && iChar <= L'Z';}
+bool          gfLexCtx_IsLowerCase      (wchar_t iChar){return iChar >= L'a' && iChar <= L'z';}
 bool          gfLexCtx_IsIdentChar      (wchar_t iChar){return gfLexCtx_IsAlpha(iChar) || gfLexCtx_IsDecimalDigit(iChar) || gfLexCtx_IsSpecial(iChar);}
 bool          gfLexCtx_IsPunctuation    (wchar_t iChar){return iChar == L'\'' || iChar == L',' || iChar == L';';}
 bool          gfLexCtx_IsBracket        (wchar_t iChar){return iChar == L'(' || iChar == L')' || iChar == L'[' || iChar == L']' || iChar == L'{' || iChar == L'}';}
@@ -1704,19 +1703,19 @@ ULSyntaxNode*   gfParser_ParseTokens (ULSyntaxParser* irParser)
 				case UL_TOK_String           : gfParser_AddNode(irParser, UL_SYN_String, cToken); break;
 
 				
-				case UL_TOK_Host_Object       : gfParser_AddNode(irParser, UL_SYN_HostObject,            cToken); break;
+				//case UL_TOK_Host_Object       : gfParser_AddNode(irParser, UL_SYN_HostObject,            cToken); break;
 				
-				case UL_TOK_Identifier        : gfParser_AddNode(irParser, UL_SYN_Identifier,            cToken); break;
+				//case UL_TOK_Identifier        : gfParser_AddNode(irParser, UL_SYN_Identifier,            cToken); break;
 				case UL_TOK_Local_Ident       : gfParser_AddNode(irParser, UL_SYN_LocalIdentifier,       cToken); break;
 				case UL_TOK_Global_Ident      : gfParser_AddNode(irParser, UL_SYN_GlobalIdentifier,      cToken); break;
 				case UL_TOK_Reference_Ident   : gfParser_AddNode(irParser, UL_SYN_ReferenceIdentifier,   cToken); break;
 				case UL_TOK_Input_Ident       : gfParser_AddNode(irParser, UL_SYN_InputIdentifier,       cToken); break;
 				case UL_TOK_Output_Ident      : gfParser_AddNode(irParser, UL_SYN_OutputIdentifier,      cToken); break;
 				case UL_TOK_Member_Ident      : gfParser_AddNode(irParser, UL_SYN_MemberIdentifier,      cToken); break;
-				///case UL_TOK_Function_Ident : gfParser_AddNode(irParser, UL_SYN_FunctionIdentifier,    cToken); break;
+				//case UL_TOK_Function_Ident : gfParser_AddNode(irParser, UL_SYN_FunctionIdentifier,    cToken); break;
 
-				case UL_TOK_Type              : gfParser_AddNode(irParser, UL_SYN_Type,                  cToken); break;
-				case UL_TOK_Packed_Tuple      : gfParser_AddNode(irParser, UL_SYN_PackedTuple,           cToken); break;
+				//case UL_TOK_Type              : gfParser_AddNode(irParser, UL_SYN_Type,                  cToken); break;
+				//case UL_TOK_Packed_Tuple      : gfParser_AddNode(irParser, UL_SYN_PackedTuple,           cToken); break;
 
 				//case TokenType.Space:
 

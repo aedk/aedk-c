@@ -61,11 +61,6 @@ typedef enum ULTokenType
 {
 	UL_TOK_Undefined,
 	UL_TOK_SyntaxToken,
-	
-	UL_TOK_Block_Error,
-	UL_TOK_Expression_Error,
-	UL_TOK_List_Error,
-	UL_TOK_ListItem_Error,
 
 	UL_TOK_Whitespace,
 	UL_TOK_Space,
@@ -102,7 +97,7 @@ typedef enum ULTokenType
 		UL_TOK_Label,
 		UL_TOK_Pointer,
 		
-		UL_TOK_Identifier,
+		//UL_TOK_Identifier,
 		UL_TOK_Reference_Ident,
 		UL_TOK_Input_Ident,
 		UL_TOK_Output_Ident,
@@ -110,51 +105,33 @@ typedef enum ULTokenType
 		UL_TOK_Global_Ident,
 		UL_TOK_Member_Ident,
 		UL_TOK_Word,
-		UL_TOK_Host_Object,
-		UL_TOK_Packed_Tuple,
-		UL_TOK_Type,
+		//UL_TOK_Host_Object,
+		//UL_TOK_Packed_Tuple,
+		//UL_TOK_Type,
 	UL_TOK_Identifiers__End,
 		//EndOF
 
-	UL_TOK_BwdOpd,
-	UL_TOK_FwdOpd,
-
-	//UL_TOK_Parenthesis, UL_TOK_ParenthesisOpener, UL_TOK_ParenthesisCloser,
-	//UL_TOK_Bracket,     UL_TOK_BracketOpener,     UL_TOK_BracketCloser,
-	//UL_TOK_Brace,       UL_TOK_BraceOpener,       UL_TOK_BraceCloser,
-
-	//UL_TOK_File,        UL_TOK_FileOpener,        UL_TOK_FileCloser,
-	//UL_TOK_Block,       UL_TOK_BlockOpener,       UL_TOK_BlockCloser,
-	//UL_TOK_Expression,  UL_TOK_ExpressionOpener,  UL_TOK_ExpressionCloser,
-	//UL_TOK_List,        UL_TOK_ListOpener,        UL_TOK_ListCloser,
-	//UL_TOK_ListItem,    UL_TOK_ListItemOpener,    UL_TOK_ListItemCloser,
-	//
-	
-	///~~ new, buggy;
-	//UL_TOK_Syntax_Tokens__Begin,
-	//	UL_TOK_File,        UL_TOK_Block,        UL_TOK_Expression,        UL_TOK_List,        UL_TOK_ListItem,        UL_TOK_Brace,        UL_TOK_Parenthesis,        UL_TOK_Bracket,
-	//	UL_TOK_File_Opener, UL_TOK_Block_Opener, UL_TOK_Expression_Opener, UL_TOK_List_Opener, UL_TOK_ListItem_Opener, UL_TOK_Brace_Opener, UL_TOK_Parenthesis_Opener, UL_TOK_Bracket_Opener,
-	//	UL_TOK_File_Closer, UL_TOK_Block_Closer, UL_TOK_Expression_Closer, UL_TOK_List_Closer, UL_TOK_ListItem_Closer, UL_TOK_Brace_Closer, UL_TOK_Parenthesis_Closer, UL_TOK_Bracket_Closer,
-
-	//	UL_TOK_Expect_ListItem,              /// List opened
-	//	UL_TOK_Expect_Next_ListItem,         /// List opened, delimiter found?
-	//	UL_TOK_Expect_ListItem_Continuation, /// List item added
-	//UL_TOK_Syntax_Tokens__End,
-	
 	UL_TOK_All_Syntax_Tokens__Begin,
 		UL_TOK_Brace,        UL_TOK_Parenthesis,        UL_TOK_Bracket,
 		UL_TOK_Brace_Opener, UL_TOK_Parenthesis_Opener, UL_TOK_Bracket_Opener,
 		UL_TOK_Brace_Closer, UL_TOK_Parenthesis_Closer, UL_TOK_Bracket_Closer,
 		
 		UL_TOK_Special_Syntax_Tokens__Begin,
-			UL_TOK_File,        UL_TOK_Block,        UL_TOK_Expression,        UL_TOK_List,        UL_TOK_ListItem,        
-			UL_TOK_File_Opener, UL_TOK_Block_Opener, UL_TOK_Expression_Opener, UL_TOK_List_Opener, UL_TOK_ListItem_Opener, 
-			UL_TOK_File_Closer, UL_TOK_Block_Closer, UL_TOK_Expression_Closer, UL_TOK_List_Closer, UL_TOK_ListItem_Closer, 
+			
+			UL_TOK_Root,        UL_TOK_Block,        UL_TOK_Expression,        UL_TOK_List,        UL_TOK_ListItem,        
+			UL_TOK_Root_Opener, UL_TOK_Block_Opener, UL_TOK_Expression_Opener, UL_TOK_List_Opener, UL_TOK_ListItem_Opener, 
+			UL_TOK_Root_Closer, UL_TOK_Block_Closer, UL_TOK_Expression_Closer, UL_TOK_List_Closer, UL_TOK_ListItem_Closer, 
 			
 			UL_TOK_Expect_Expression,           
 			UL_TOK_Expect_List,                 
 			UL_TOK_Expect_ListItem,             
 			UL_TOK_Expect_Next_Atom,            
+			
+			UL_TOK_Root_Error,
+			UL_TOK_Block_Error,
+			UL_TOK_Expression_Error,
+			UL_TOK_List_Error,
+			UL_TOK_ListItem_Error,
 			
 		UL_TOK_Special_Syntax_Tokens__End,
 	UL_TOK_All_Syntax_Tokens__End,
@@ -311,16 +288,18 @@ void          gfLexCtx_ParseString      (LexerContext* iCtx);
 void          gfLexCtx_ParseChar        (LexerContext* iCtx);
 void          gfLexCtx_ParseGarbage     (LexerContext* iCtx);
 
-bool          gfLexCtx_IsNewline      (wchar_t iChar);
-bool          gfLexCtx_IsWhitespace   (wchar_t iChar);
-bool          gfLexCtx_IsDecimalDigit (wchar_t iChar);
-bool          gfLexCtx_IsNumberChar   (wchar_t iChar);
-bool          gfLexCtx_IsAlpha        (wchar_t iChar);
-bool          gfLexCtx_IsIdentChar    (wchar_t iChar);
-bool          gfLexCtx_IsPunctuation  (wchar_t iChar);
-bool          gfLexCtx_IsBracket      (wchar_t iChar);
-bool          gfLexCtx_IsQuote        (wchar_t iChar);
-bool          gfLexCtx_IsSpecial      (wchar_t iChar);
+bool _inline  gfLexCtx_IsNewline      (wchar_t iChar);
+bool _inline  gfLexCtx_IsWhitespace   (wchar_t iChar);
+bool _inline  gfLexCtx_IsDecimalDigit (wchar_t iChar);
+bool _inline  gfLexCtx_IsNumberChar   (wchar_t iChar);
+bool _inline  gfLexCtx_IsAlpha        (wchar_t iChar);
+bool _inline  gfLexCtx_IsUpperCase    (wchar_t iChar);
+bool _inline  gfLexCtx_IsLowerCase    (wchar_t iChar);
+bool _inline  gfLexCtx_IsIdentChar    (wchar_t iChar);
+bool _inline  gfLexCtx_IsPunctuation  (wchar_t iChar);
+bool _inline  gfLexCtx_IsBracket      (wchar_t iChar);
+bool _inline  gfLexCtx_IsQuote        (wchar_t iChar);
+bool _inline  gfLexCtx_IsSpecial      (wchar_t iChar);
 
 
 
