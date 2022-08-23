@@ -21,7 +21,6 @@ typedef        unsigned short wchar_t;
 
 
 
-
 typedef struct WString WString;
 
 struct WString
@@ -30,22 +29,23 @@ struct WString
 	int Capacity, Length;
 };
 
-void     gfWString_Reserve    (WString* irString, int iNewCapacity);
+void     gfWString_Reserve    (WString* iString, int iNewCapacity);
 WString* gfWString_Create     (int iInitialCapacity);
-void     gfWString_Destroy    (WString* irString);
-void     gfWString_Reserve    (WString* irString, int iNewCapacity);
+void     gfWString_Destroy    (WString* iString);
+void     gfWString_Reserve    (WString* iString, int iNewCapacity);
 
-int      gfWString_Write      (WString* irString, wchar_t* iSrcBuffer, int iSrcLength);
-int      gfWString_WriteLine  (WString* irString, wchar_t* iSrcBuffer, int iSrcLength, int iIndent);
+int      gfWString_Write      (WString* iString, wchar_t* iSrcBuffer, int iSrcLength);
+int      gfWString_WriteLine  (WString* iString, wchar_t* iSrcBuffer, int iSrcLength, int iIndent);
 
 
 
-typedef struct DataNodeValue DataNodeValue;
+typedef struct DataNodeValue      DataNodeValue;
+typedef struct DataNodeTypeList   DataNodeTypeList;
 
-typedef struct DataNodeStruct DataNodeStruct;
+typedef struct DataNodeStruct     DataNodeStruct;
 typedef struct DataNodeCollection DataNodeCollection;
 
-///typedef struct ULSyntaxNode;
+//typedef struct ULSyntaxNode;
 typedef struct ULContext ULContext;
 typedef struct ULSyntaxNode ULSyntaxNode;
 
@@ -58,8 +58,12 @@ typedef enum DataNodeType
 {
 	DN_T_Null,
 	DN_T_Undefined,
+	
 	DN_T_Element,
+	DN_T_Element_Missing,
 	DN_T_Attribute,
+	DN_T_Attribute_Missing,
+	
 	DN_T_Test,
 }
 DataNodeType;
@@ -81,8 +85,8 @@ typedef enum DataNodeValueType
 	DN_VT_NumInvalid,
 	DN_VT_String,
 	DN_VT_StringPtr,
-	DN_VT_WideString,
-	DN_VT_WideStringPtr,
+	DN_VT_WString,
+	DN_VT_WStringPtr,
 	DN_VT_Int32,
 	DN_VT_UInt32,
 	DN_VT_Int64,
@@ -96,23 +100,23 @@ DataNodeValueType;
 
 
 
-void                 gfDNChildren_Init     (DataNodeStruct* irParentNode);
-void                 gfDNChildren_Reserve  (DataNodeStruct* irParentNode, int iCapacity);
-DataNodeStruct*      gfDNChildren_Allocate (DataNodeStruct* irParentNode, int iCount);
-DataNodeStruct*      gfDNChildren_Pop      (DataNodeStruct* irParentNode);
-DataNodeStruct*      gfDNChildren_Peek     (DataNodeStruct* irParentNode);
-void                 gfDNChildren_Clear    (DataNodeStruct* irParentNode);
+void                 gfDNChildren_Init     (DataNodeStruct* iParentNode);
+void                 gfDNChildren_Reserve  (DataNodeStruct* iParentNode, int iCapacity);
+DataNodeStruct*      gfDNChildren_Allocate (DataNodeStruct* iParentNode, int iCount);
+DataNodeStruct*      gfDNChildren_Pop      (DataNodeStruct* iParentNode);
+DataNodeStruct*      gfDNChildren_Peek     (DataNodeStruct* iParentNode);
+void                 gfDNChildren_Clear    (DataNodeStruct* iParentNode);
 
 //
 ////DataNodeCollection*  gfDNChildren_Create   (int iCapacity);
-//void                 gfDNChildren_Destroy  (DataNodeStruct* irParentNode);
+//void                 gfDNChildren_Destroy  (DataNodeStruct* iParentNode);
 
-void                 gfDNAttributes_Init     (DataNodeStruct* irParentNode);
-void                 gfDNAttributes_Reserve  (DataNodeStruct* irParentNode, int iCapacity);
-DataNodeStruct*      gfDNAttributes_Allocate (DataNodeStruct* irParentNode, int iCount);
-DataNodeStruct*      gfDNAttributes_Pop      (DataNodeStruct* irParentNode);
-DataNodeStruct*      gfDNAttributes_Peek     (DataNodeStruct* irParentNode);
-void                 gfDNAttributes_Clear    (DataNodeStruct* irParentNode);
+void                 gfDNAttributes_Init     (DataNodeStruct* iParentNode);
+void                 gfDNAttributes_Reserve  (DataNodeStruct* iParentNode, int iCapacity);
+DataNodeStruct*      gfDNAttributes_Allocate (DataNodeStruct* iParentNode, int iCount);
+DataNodeStruct*      gfDNAttributes_Pop      (DataNodeStruct* iParentNode);
+DataNodeStruct*      gfDNAttributes_Peek     (DataNodeStruct* iParentNode);
+void                 gfDNAttributes_Clear    (DataNodeStruct* iParentNode);
 
 
 struct DataNodeValue
@@ -121,20 +125,71 @@ struct DataNodeValue
 	DataNodeValueType Type;
 	
 	DataNodeValue* NextPtr;
+	
+	
+	
+	#ifdef __cplusplus
+		DataNodeValue();
+	
+		DataNodeValue(char*    iValue);
+		DataNodeValue(wchar_t* iValue);
+		DataNodeValue(int      iValue);
+		DataNodeValue(float    iValue);
+		DataNodeValue(double   iValue);
+
+		//operator DataNode ();
+		operator char*    ();
+		operator wchar_t* ();
+		operator int      ();
+		operator float    ();
+		operator double   ();
+		
+		//DataNodeValue& operator= (const DataNodeValue& iNode);
+	#endif
 };
+
+DataNodeValue* gfDNValue_AllocNext(DataNodeValue* irValue);
+void           gfDNValue_ClearAll(DataNodeValue* irValue);
+DataNodeValue* gfDNValue_GetNext(DataNodeValue* irValue);
+
+
+int    gfDNValue_GetI32  (DataNodeValue* iValue);
+float  gfDNValue_GetF32  (DataNodeValue* iValue);
+double gfDNValue_GetF64  (DataNodeValue* iValue);
+
+void   gfDNValue_GetStr  (DataNodeValue* iValue, char*    iDstBuf, size_t iMaxLen);
+void   gfDNValue_GetWStr (DataNodeValue* iValue, wchar_t* iDstBuf, size_t iMaxLen);
+
+char*    gfDNValue_GetStrPtr  (DataNodeValue* iValue);
+wchar_t* gfDNValue_GetWStrPtr (DataNodeValue* iValue);
+
+
+
+struct DataNodeTypeList
+{
+	DataNodeValueType* Items;
+	int Count,Capacity;
+};
+
+DataNodeTypeList* gfDNTypeList_Create(wchar_t* iTypeListString);
+void              gfDNTypeList_Destroy(DataNodeTypeList* iTypeList);
+
+
+
+
 
 struct DataNodeStruct
 {
 	wchar_t Name[dDataNodeNameMaxLength];
-	///wchar_t Value[dDataNodeValueMaxLength];
+	//wchar_t Value[dDataNodeValueMaxLength];
 	
 	DataNodeType      Type;
 	DataNodeValueType NameType;
 	DataNodeValue     Value;
-	///DataNodeValueType ValueType;
+	//DataNodeValueType ValueType;
 	
 	DataNodeStruct*   Parent;
-	DataNodeStruct*   Attributes; int AttrCount, AttrCapacity;
+	DataNodeStruct*   Attributes; int AttrCount,  AttrCapacity;
 	DataNodeStruct*   Children;   int ChildCount, ChildCapacity;
 	
 	
@@ -159,36 +214,31 @@ struct DataNodeStruct
 };
 
 DataNodeStruct* gfDataNode_Create();
-void            gfDataNode_Destroy(DataNodeStruct* irNode);
+void            gfDataNode_Destroy(DataNodeStruct* iNode);
 
-void gfDataNode_Init_1(DataNodeStruct* irNode);
-void gfDataNode_Init_2(DataNodeStruct* irNode, DataNodeType iNodeType);
-void gfDataNode_Init_3(DataNodeStruct* irNode, DataNodeType iNodeType, DataNodeValueType iValueType);
+void gfDataNode_Init_1(DataNodeStruct* iNode);
+void gfDataNode_Init_2(DataNodeStruct* iNode, DataNodeType iNodeType);
+void gfDataNode_Init_3(DataNodeStruct* iNode, DataNodeType iNodeType, DataNodeValueType iValueType);
 
 void gfDataNode_InitStatic();
 
+void gfDataNode_UpdateState(DataNodeStruct* iNode, bool iIsMissing);
 
-void gfDataNode_GetId   (DataNodeStruct* iNode, wchar_t* oId);
-void gfDataNode_GetPath (DataNodeStruct* iNode, wchar_t* oPath);
-
-
-
-
-void gfDataNode_FromULSyntaxNode (DataNodeStruct* irNode, ULSyntaxNode* iSyntaxNode, ULContext* iULC);///, DataNodeType iNodeType)
+void gfDataNode_FromULSyntaxNode (DataNodeStruct* iNode, ULSyntaxNode* iSyntaxNode, ULContext* iULC);///, DataNodeType iNodeType)
 void gfDataNode_ToULSyntaxNode   (DataNodeStruct* iNode,  ULSyntaxNode* irSyntaxNode);
 DataNodeStruct* gfDataNode_FromString(wchar_t* iBuffer);
-int gfDataNode_ToString(DataNodeStruct* iNode, WString* irString, int iIndent);
+int gfDataNode_ToString(DataNodeStruct* iNode, WString* iString, int iIndent);
 
 
 
-DataNodeStruct* gfDataNode_GetNodeByPath(DataNodeStruct* irNode, wchar_t* iPath, bool iDoAllowSubPath, bool iDoCreateMissing);
-DataNodeStruct* gfDataNode_SetNodeByPath(DataNodeStruct* irNode, wchar_t* iPath, DataNodeStruct* iNewNode, bool iDoAllowSubPath, bool iDoCreateMissing);
+DataNodeStruct* gfDataNode_GetNodeByPath(DataNodeStruct* iNode, wchar_t* iPath, bool iDoAllowSubPath, bool iDoCreateMissing);
+DataNodeStruct* gfDataNode_SetNodeByPath(DataNodeStruct* iNode, wchar_t* iPath, DataNodeStruct* iNewNode, bool iDoAllowSubPath, bool iDoCreateMissing);
 
 DataNodeStruct* gfDataNode_GetChildByNameAndIndex(DataNodeStruct* iNode, char* iName, int iIndex);
 DataNodeStruct* gfDataNode_GetChildByNameAndIndex_2(DataNodeStruct* iNode, wchar_t* iName, int iIndex);
 
 
-///DataNodeStruct* gfDataNode_GetChild(DataNodeStruct* iNode, wchar_t* iPath);
+//DataNodeStruct* gfDataNode_GetChild(DataNodeStruct* iNode, wchar_t* iPath);
 
 void gfDataNode_Begin(DataNodeStruct** irNode, wchar_t* iPath);
 void gfDataNode_End(DataNodeStruct** irNode);
@@ -199,27 +249,33 @@ void gfDataNode_SetValueSZ  (DataNodeStruct* iNode, wchar_t* iPath, char*    iVa
 void gfDataNode_SetValueWSZ (DataNodeStruct* iNode, wchar_t* iPath, wchar_t* iValue);
 void gfDataNode_SetValueI32 (DataNodeStruct* iNode, wchar_t* iPath, int      iValue);
 void gfDataNode_SetValueF32 (DataNodeStruct* iNode, wchar_t* iPath, float    iValue);
+void gfDataNode_SetValueF64 (DataNodeStruct* iNode, wchar_t* iPath, double   iValue);
 
 
 wchar_t* gfDataNode_GetName     (DataNodeStruct* iNode);
+
+void     gfDataNode_GetValuesVA (DataNodeStruct* iNode, wchar_t* iPath, wchar_t* iFormat, void* iVArgs);
+void     gfDataNode_GetValues   (DataNodeStruct* iNode, wchar_t* iPath, wchar_t* iFormat, ...);
+
+
 char*    gfDataNode_GetValueSZ  (DataNodeStruct* iNode, wchar_t* iPath);
 wchar_t* gfDataNode_GetValueWSZ (DataNodeStruct* iNode, wchar_t* iPath);
 int      gfDataNode_GetValueI32 (DataNodeStruct* iNode, wchar_t* iPath);
 float    gfDataNode_GetValueF32 (DataNodeStruct* iNode, wchar_t* iPath);
+double   gfDataNode_GetValueF64 (DataNodeStruct* iNode, wchar_t* iPath);
 
 wchar_t* gfDataNode_GetNameOr     (DataNodeStruct* iNode, wchar_t* iName, wchar_t* iOrName);
 char*    gfDataNode_GetValueSZOr  (DataNodeStruct* iNode, wchar_t* iPath, char*    iOrValue);
 wchar_t* gfDataNode_GetValueWSZOr (DataNodeStruct* iNode, wchar_t* iPath, wchar_t* iOrValue);
 int      gfDataNode_GetValueI32Or (DataNodeStruct* iNode, wchar_t* iPath, int      iOrValue);
 float    gfDataNode_GetValueF32Or (DataNodeStruct* iNode, wchar_t* iPath, float    iOrValue);
+double   gfDataNode_GetValueF64Or (DataNodeStruct* iNode, wchar_t* iPath, double   iOrValue);
 
 ///int gfDataNode_ToString(DataNodeStruct* iNode, wchar_t** irBuffer, int iIndent);
 ///int gfDataNode_ToString(DataNodeStruct* iNode, wchar_t** irBuffer, int iBufferCapacity, int iBufferSize, int iIndent);
 
 extern DataNodeStruct gDataNodeStruct_Null;
 
-
-///~~ C++ part;
 
 #ifdef __cplusplus
 
@@ -233,21 +289,21 @@ class DataNode
 {
 	public:
 	//
-	///wchar_t Name[dDataNodeNameMaxLength];
-	///wchar_t Value[dDataNodeValueMaxLength];
+	//wchar_t Name[dDataNodeNameMaxLength];
+	//wchar_t Value[dDataNodeValueMaxLength];
 	//
-	DataNodeStruct* Ref;
+	DataNodeStruct* Ref;	
 	
 	 DataNode();
-	/// DataNode(DataNodeType iNodeType);
-	 ///DataNode(DLSyntaxNode* iSyntaxNode);
+	 // DataNode(DataNodeType iNodeType);
+	 //DataNode(DLSyntaxNode* iSyntaxNode);
 	~DataNode();
 	
 	//DataNode(DataNodeStruct iValue);
 	DataNode(DataNodeStruct& iValue);
 	DataNode(DataNodeStruct* iValue);
 	
-	///DataNode(DataNodeStruct iValue);
+	//DataNode(DataNodeStruct iValue);
 	DataNode(char*    iValue);
 	DataNode(wchar_t* iValue);
 	DataNode(int      iValue);
@@ -257,26 +313,34 @@ class DataNode
 	operator DataNodeStruct& ();
 	operator DataNodeStruct* ();
 	
-	///operator DataNodeStruct ();
+	//operator DataNodeStruct ();
 	operator char*    ();
 	operator wchar_t* ();
 	operator int      ();
 	operator float    ();
 	operator double   ();
 	
-	///bool             operator= ();
+	//bool             operator= ();
 	bool             operator! ();
 
 
-	///      DataNodeStruct*  operator[](wchar_t* iPath);
-	///const DataNodeStruct*  operator[](wchar_t* iPath) const;
+	//      DataNodeStruct*  operator[](wchar_t* iPath);
+	//const DataNodeStruct*  operator[](wchar_t* iPath) const;
 	
 			DataNodeStruct&  operator[](char* iPath);
 	const DataNodeStruct&  operator[](char* iPath) const;
 		   DataNodeStruct&  operator[](wchar_t* iPath);
 	const DataNodeStruct&  operator[](wchar_t* iPath) const;
-
+	
+	DataNodeValue&  GetValue(int iIndex);
+	//int             GetValueI32(int iIndex);
+	//float           GetValueF32(int iIndex);
+	//double          GetValueF64(int iIndex);
+	void            SetValue(int iIndex, DataNodeValue& iValue);
+	
 	DataNodeStruct& Create(wchar_t* iPath);
+	
+	void Get(wchar_t* iPath, wchar_t* iFormat, ...);
 	
 	void Load(wchar_t* iPath);
 	void Save(wchar_t* iPath);
@@ -313,7 +377,5 @@ extern DataNode gDataNode_Null;
     }
 #endif
 
-
-///~~ include guard;
 #endif
 

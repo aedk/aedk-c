@@ -25,12 +25,20 @@ struct $__UL_Context__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{in
 
 
 
-ULContext* gfULCtx_Create           (wchar_t* iBuffer, size_t iBufferLength, bool iIsComplete)
+ULContext* gfULCtx_Create           (wchar_t* iBuffer, size_t iBufferLength, bool iDoBuildAST)
 {
 	ULContext* oULC = malloc(sizeof(ULContext));
 	{
 		oULC->Lexer = gfLexCtx_Create(oULC, iBuffer, iBufferLength);
 		oULC->Parser = gfParser_Create(oULC);
+		
+		if(iDoBuildAST)
+		{
+			gfLexCtx_ParseBuffer(oULC->Lexer);
+			gfLexCtx_ProcessPairs(oULC->Lexer);
+			
+			gfParser_ParseTokens(oULC->Parser);
+		}
 	}
 	return oULC;
 }
@@ -43,29 +51,30 @@ void       gfULCtx_Destroy          (ULContext* irULC)
 }
 
 
+
+
 struct $__UL_Token__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
 
 
 
-int wcsindexof(wchar_t* dataset, int datasetLength, wchar_t* target, int targetLen)
+int wcsindexof(wchar_t* iBuffer, int iBufferLen, wchar_t* iValue, int iValueLen)
 {
-	int i,j;
-
-	for(i = 0; i < datasetLength; i ++)
+	int cBufCi;
+	for(cBufCi = 0; cBufCi < iBufferLen; cBufCi ++)
 	{
-		if(dataset[i] == target[0])
+		if(iBuffer[cBufCi] == iValue[0])
 		{
-			int found = 1;
-			for(j = 0; j < targetLen; j ++)
+			bool cIsFound = true; int cValCi; for(cValCi = 0; cValCi < iValueLen; cValCi ++)
 			{
-				int k = i + j;
-				if(k >= datasetLength || target[j] != dataset[k])
+				int cBufOffs = cBufCi + cValCi;
+				
+				if(cBufOffs >= iBufferLen || iValue[cValCi] != iBuffer[cBufOffs])
 				{
-					found = 0;
+					cIsFound = false;
 					break;
 				}
 			}
-			if(found) return i;
+			if(cIsFound) return cBufCi;
 		}
 	}
 	return -1;
@@ -147,71 +156,71 @@ ULTokenTypeList*  gfTypeList_Create   (int iCapacity)
 	}
 	return oList;
 }
-void              gfTypeList_Destroy  (ULTokenTypeList* irList)
+void              gfTypeList_Destroy  (ULTokenTypeList* iList)
 {
-	if(irList->Items != nullptr) free(irList->Items);
+	if(iList->Items != nullptr) free(iList->Items);
 	
-	free(irList);
+	free(iList);
 }
-ULTokenType*      gfTypeList_Allocate (ULTokenTypeList* irList, int iCount)
+ULTokenType*      gfTypeList_Allocate (ULTokenTypeList* iList, int iCount)
 {
-	gfTypeList_Reserve(irList, irList->Count + iCount);
+	gfTypeList_Reserve(iList, iList->Count + iCount);
 	
-	irList->Count += iCount;
+	iList->Count += iCount;
 	
-	return &irList->Items[irList->Count - 1];
+	return &iList->Items[iList->Count - 1];
 }
 
 
-void              gfTypeList_PushValue    (ULTokenTypeList* irList, ULTokenType iItem)
+void              gfTypeList_PushValue    (ULTokenTypeList* iList, ULTokenType iItem)
 {
-	ULTokenType* _Item = gfTypeList_Allocate(irList,1);
+	ULTokenType* _Item = gfTypeList_Allocate(iList,1);
 	
 	*_Item = iItem;
-	///irList->Items[irList->Count - 1] = iItem;
+	///iList->Items[iList->Count - 1] = iItem;
 }
-ULTokenType       gfTypeList_PopValue      (ULTokenTypeList* irList)
+ULTokenType       gfTypeList_PopValue      (ULTokenTypeList* iList)
 {
-	if(irList->Count <= 0) return nullptr;
+	if(iList->Count <= 0) return nullptr;
 	
-	return irList->Items[-- irList->Count];
+	return iList->Items[-- iList->Count];
 }
-ULTokenType*      gfTypeList_Pop      (ULTokenTypeList* irList)
+ULTokenType*      gfTypeList_Pop      (ULTokenTypeList* iList)
 {
-	if(irList->Count <= 0) return nullptr;
+	if(iList->Count <= 0) return nullptr;
 	
-	return &irList->Items[-- irList->Count];
+	return &iList->Items[-- iList->Count];
 }
-ULTokenType       gfTypeList_PeekValue (ULTokenTypeList* irList)
+ULTokenType       gfTypeList_PeekValue (ULTokenTypeList* iList)
 {
-	if(irList->Count <= 0) return nullptr;
+	if(iList->Count <= 0) return nullptr;
 	
-	return irList->Items[irList->Count - 1];
+	return iList->Items[iList->Count - 1];
 }
-ULTokenType*      gfTypeList_Peek     (ULTokenTypeList* irList)
+ULTokenType*      gfTypeList_Peek     (ULTokenTypeList* iList)
 {
-	if(irList->Count <= 0) return nullptr;
+	if(iList->Count <= 0) return nullptr;
 	
-	return &irList->Items[irList->Count - 1];
+	return &iList->Items[iList->Count - 1];
 }
 
-void              gfTypeList_Reserve  (ULTokenTypeList* irList, int iCapacity)
+void              gfTypeList_Reserve  (ULTokenTypeList* iList, int iCapacity)
 {
-	if(iCapacity <= irList->Capacity) return;
+	if(iCapacity <= iList->Capacity) return;
 	
 	
 	{
 		size_t _OldSize, _NewSize;
-		ULTokenType *_ItemsOldPtr = irList->Items, *_ItemsNewPtr;//, _ItemsNewPtr;
-		///_NewPtr = realloc((void*)(irList->Items), iCapacity);
+		ULTokenType *_ItemsOldPtr = iList->Items, *_ItemsNewPtr;//, _ItemsNewPtr;
+		///_NewPtr = realloc((void*)(iList->Items), iCapacity);
 		
 		int _NeedCapacity = (int)(iCapacity * dULTokenTypeListCapacityMultiplier);
 		size_t _NeedSize = _NeedCapacity * sizeof(ULTokenType); //, _Size;
 		{
 			
 			
-			///irList->Capacity
-			/*if(_NeedSize < irList->Capacity * 2)
+			///iList->Capacity
+			/*if(_NeedSize < iList->Capacity * 2)
 			{
 				
 			}*/
@@ -219,7 +228,7 @@ void              gfTypeList_Reserve  (ULTokenTypeList* irList, int iCapacity)
 		
 		///_OldSize = _ItemsOldPtr != nullptr ? _msize(_ItemsOldPtr) : 0;
 		
-		_ItemsNewPtr = irList->Items == nullptr ? malloc(_NeedSize) : realloc(irList->Items, _NeedSize);
+		_ItemsNewPtr = iList->Items == nullptr ? malloc(_NeedSize) : realloc(iList->Items, _NeedSize);
 		
 		///_NewSize = _msize(_ItemsNewPtr);
 		
@@ -228,13 +237,13 @@ void              gfTypeList_Reserve  (ULTokenTypeList* irList, int iCapacity)
 		assert(_ItemsNewPtr != nullptr);
 		
 		
-		irList->Items    = _ItemsNewPtr;
-		irList->Capacity = _NeedCapacity;
+		iList->Items    = _ItemsNewPtr;
+		iList->Capacity = _NeedCapacity;
 	}
 }
-void              gfTypeList_Clear    (ULTokenTypeList* irList)
+void              gfTypeList_Clear    (ULTokenTypeList* iList)
 {
-	irList->Count = 0;
+	iList->Count = 0;
 }
 
 
@@ -252,65 +261,65 @@ ULTokenList*      gfTList_Create   (int iCapacity)
 	}
 	return oTokenList;
 }
-void              gfTList_Destroy  (ULTokenList* irList)
+void              gfTList_Destroy  (ULTokenList* iList)
 {
-	if(irList->Items != nullptr) free(irList->Items);
+	if(iList->Items != nullptr) free(iList->Items);
 	
-	free(irList);
+	free(iList);
 }
-ULToken*          gfTList_Allocate (ULTokenList* irList, int iCount)
+ULToken*          gfTList_Allocate (ULTokenList* iList, int iCount)
 {
-	gfTList_Reserve(irList, irList->Count + iCount);
+	gfTList_Reserve(iList, iList->Count + iCount);
 	
-	irList->Count += iCount;
+	iList->Count += iCount;
 	
-	return &irList->Items[irList->Count - 1];
+	return &iList->Items[iList->Count - 1];
 }
 
-void              gfTList_Push     (ULTokenList* irList, ULToken* iItem)
+void              gfTList_Push     (ULTokenList* iList, ULToken* iItem)
 {
-	ULToken* _Token = gfTList_Allocate(irList,1);
+	ULToken* _Token = gfTList_Allocate(iList,1);
 	
-	irList->Items[irList->Count - 1] = *iItem;
-	//if(irList->Count + 1 >= irList->Capacity)
+	iList->Items[iList->Count - 1] = *iItem;
+	//if(iList->Count + 1 >= iList->Capacity)
 	//{
-	//	gfTList_Reserve(irList, irList->Capacity == 0 ? 1 : (int)(irList->Capacity * dULTokenListCapacityMultiplier));
+	//	gfTList_Reserve(iList, iList->Capacity == 0 ? 1 : (int)(iList->Capacity * dULTokenListCapacityMultiplier));
 	//}
-	//irList->Items[irList->Count ++] = *iToken;
+	//iList->Items[iList->Count ++] = *iToken;
 }
-ULToken*          gfTList_Pop      (ULTokenList* irList)
+ULToken*          gfTList_Pop      (ULTokenList* iList)
 {
 	ULToken* oToken;
 
-	if(irList->Count <= 0) return nullptr;
+	if(iList->Count <= 0) return nullptr;
 	
 	
-	return &irList->Items[-- irList->Count];
+	return &iList->Items[-- iList->Count];
 }
-ULToken*          gfTList_Peek     (ULTokenList* irList)
+ULToken*          gfTList_Peek     (ULTokenList* iList)
 {
-	if(irList->Count <= 0) return nullptr;
+	if(iList->Count <= 0) return nullptr;
 	
-	return &irList->Items[irList->Count - 1];
+	return &iList->Items[iList->Count - 1];
 }
 
-void              gfTList_Reserve  (ULTokenList* irList, int iCapacity)
+void              gfTList_Reserve  (ULTokenList* iList, int iCapacity)
 {
-	if(iCapacity <= irList->Capacity) return;
+	if(iCapacity <= iList->Capacity) return;
 	
 	
 	{
 		size_t _OldSize, _NewSize;
-		ULToken *_ItemsOldPtr = irList->Items, *_ItemsNewPtr;//, _ItemsNewPtr;
-		///_NewPtr = realloc((void*)(irList->Items), iCapacity);
+		ULToken *_ItemsOldPtr = iList->Items, *_ItemsNewPtr;//, _ItemsNewPtr;
+		///_NewPtr = realloc((void*)(iList->Items), iCapacity);
 		
 		int _NeedCapacity = (int)(iCapacity * dULTokenListCapacityMultiplier);
 		size_t _NeedSize = _NeedCapacity * sizeof(ULToken); //, _Size;
 		{
 			
 			
-			///irList->Capacity
-			/*if(_NeedSize < irList->Capacity * 2)
+			///iList->Capacity
+			/*if(_NeedSize < iList->Capacity * 2)
 			{
 				
 			}*/
@@ -318,7 +327,7 @@ void              gfTList_Reserve  (ULTokenList* irList, int iCapacity)
 		
 		///_OldSize = _ItemsOldPtr != nullptr ? _msize(_ItemsOldPtr) : 0;
 		
-		_ItemsNewPtr = irList->Items == nullptr ? malloc(_NeedSize) : realloc(irList->Items, _NeedSize);
+		_ItemsNewPtr = iList->Items == nullptr ? malloc(_NeedSize) : realloc(iList->Items, _NeedSize);
 		
 		///_NewSize = _msize(_ItemsNewPtr);
 		
@@ -327,22 +336,22 @@ void              gfTList_Reserve  (ULTokenList* irList, int iCapacity)
 		assert(_ItemsNewPtr != nullptr);
 		
 		
-		irList->Items    = _ItemsNewPtr;
-		irList->Capacity = _NeedCapacity;
+		iList->Items    = _ItemsNewPtr;
+		iList->Capacity = _NeedCapacity;
 	
 		
 	}
-	///irList->Items = malloc(iCapacity);
+	///iList->Items = malloc(iCapacity);
 	
 	//if(_ItemsOldPtr != nullptr)
 	//{
-	//	memcpy(irList->Items, _ItemsOldPtr, irList->Count);
+	//	memcpy(iList->Items, _ItemsOldPtr, iList->Count);
 	//	free(_ItemsOldPtr);
 	//}
 }
-void              gfTList_Clear    (ULTokenList* irList)
+void              gfTList_Clear    (ULTokenList* iList)
 {
-	irList->Count = 0;
+	iList->Count = 0;
 }
 
 
@@ -361,77 +370,77 @@ ULSyntaxNodeList* gfSNList_Create   (int iCapacity)
 	}
 	return oList;
 }
-void              gfSNList_Destroy  (ULSyntaxNodeList* irList)
+void              gfSNList_Destroy  (ULSyntaxNodeList* iList)
 {
-	if(irList->Items != nullptr) free(irList->Items);
+	if(iList->Items != nullptr) free(iList->Items);
 	
-	free(irList);
+	free(iList);
 }
-ULSyntaxNode*     gfSNList_Allocate (ULSyntaxNodeList* irList, int iCount)
+ULSyntaxNode*     gfSNList_Allocate (ULSyntaxNodeList* iList, int iCount)
 {
-	gfSNList_Reserve(irList, irList->Count + iCount);
+	gfSNList_Reserve(iList, iList->Count + iCount);
 	
 	/*if(iCount != 1)
 	{
 		HERE;
 	}*/
-	irList->Count += iCount;
+	iList->Count += iCount;
 	
-	return &irList->Items[irList->Count - 1];
+	return &iList->Items[iList->Count - 1];
 }
 
-///void               gfSNList_Push     (ULSyntaxNodeList* irList, ULSyntaxNode* iItem)
+///void               gfSNList_Push     (ULSyntaxNodeList* iList, ULSyntaxNode* iItem)
 //{
-//	ULSyntaxNode* _Token = gfSNList_Allocate(irList,1);
+//	ULSyntaxNode* _Token = gfSNList_Allocate(iList,1);
 //	
-//	irList->Items[irList->Count - 1] = *iItem;
+//	iList->Items[iList->Count - 1] = *iItem;
 //}
-ULSyntaxNode*     gfSNList_Pop      (ULSyntaxNodeList* irList)
+ULSyntaxNode*     gfSNList_Pop      (ULSyntaxNodeList* iList)
 {
 	ULSyntaxNode* oToken;
 
-	if(irList->Count <= 0) return nullptr;
+	if(iList->Count <= 0) return nullptr;
 	
-	return &irList->Items[-- irList->Count];
+	return &iList->Items[-- iList->Count];
 }
-ULSyntaxNode*     gfSNList_Peek     (ULSyntaxNodeList* irList)
+ULSyntaxNode*     gfSNList_Peek     (ULSyntaxNodeList* iList)
 {
-	if(irList->Count <= 0) return nullptr;
+	if(iList->Count <= 0) return nullptr;
 	
-	return &irList->Items[irList->Count - 1];
+	return &iList->Items[iList->Count - 1];
 }
 
-void              gfSNList_Reserve  (ULSyntaxNodeList* irList, int iCapacity)
+void              gfSNList_Reserve  (ULSyntaxNodeList* iList, int iCapacity)
 {
-	if(iCapacity <= irList->Capacity) return;
+	if(iCapacity <= iList->Capacity) return;
 	
 	{
 		size_t _OldSize, _NewSize;
-		ULSyntaxNode *_ItemsOldPtr = irList->Items, *_ItemsNewPtr;//, _ItemsNewPtr;
-		///_NewPtr = realloc((void*)(irList->Items), iCapacity);
+		ULSyntaxNode *_ItemsOldPtr = iList->Items, *_ItemsNewPtr;//, _ItemsNewPtr;
+		///_NewPtr = realloc((void*)(iList->Items), iCapacity);
 		
 		int _NeedCapacity = (int)(iCapacity * dULSyntaxNodeListCapacityMultiplier);
 		size_t _NeedSize = _NeedCapacity * sizeof(ULSyntaxNode); //, _Size;
 		
 		///_OldSize = _ItemsOldPtr != nullptr ? _msize(_ItemsOldPtr) : 0;
 		
-		_ItemsNewPtr = irList->Items == nullptr ? malloc(_NeedSize) : realloc(irList->Items, _NeedSize);
+		_ItemsNewPtr = iList->Items == nullptr ? malloc(_NeedSize) : realloc(iList->Items, _NeedSize);
 		
 		///_NewSize = _msize(_ItemsNewPtr);
 			
 		assert(_ItemsNewPtr != nullptr);
 		
 		
-		irList->Items    = _ItemsNewPtr;
-		irList->Capacity = _NeedCapacity;
+		iList->Items    = _ItemsNewPtr;
+		iList->Capacity = _NeedCapacity;
 		
 		
 		
 		if(true)
 		{
-			int _PPc = irList->Count, cPi = 0; for(; cPi < _PPc; cPi ++)
+			int _PPc = iList->Count, cPi = 0; for(; cPi < _PPc; cPi ++)
 			{
-				ULSyntaxNode* cParentNode = &irList->Items[cPi];
+				ULSyntaxNode* cParentNode = &iList->Items[cPi];
 				int _CCc, cCi; 
 				
 				cParentNode->Children->Owner = cParentNode;
@@ -445,9 +454,9 @@ void              gfSNList_Reserve  (ULSyntaxNodeList* irList, int iCapacity)
 		}
 	}
 }
-void              gfSNList_Clear    (ULSyntaxNodeList* irList)
+void              gfSNList_Clear    (ULSyntaxNodeList* iList)
 {
-	irList->Count = 0;
+	iList->Count = 0;
 }
 
 
@@ -580,7 +589,7 @@ void          gfLexCtx_AddToken         (LexerContext* iCtx, ULTokenType iTokenT
 	{
 		
 	}*/
-	//irList->Count
+	//iList->Count
 	if(_Token->Length != 0)
 	{
 		iCtx->State->Position = _Token->Offset + _Token->Length;

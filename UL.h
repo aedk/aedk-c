@@ -15,7 +15,7 @@ typedef        char           bool;
 typedef        unsigned short wchar_t;
 #endif
 
-int wcsindexof(wchar_t* dataset, int datasetLength, wchar_t* target, int targetLen);
+int wcsindexof(wchar_t* iBuffer, int iBufferLen, wchar_t* iValue, int iValueLen);
 
 typedef struct ULContext       ULContext;
 
@@ -52,7 +52,7 @@ struct ULContext
 	
 };
 
-ULContext* gfULCtx_Create           (wchar_t* iBuffer, size_t iBufferLength, bool iIsComplete);
+ULContext* gfULCtx_Create           (wchar_t* iBuffer, size_t iBufferLength, bool iDoBuildAST);
 void       gfULCtx_Destroy          (ULContext* iULC);
 
 
@@ -166,48 +166,48 @@ struct ULTokenList
 
 
 ULTokenTypeList* gfTypeList_Create    (int iCapacity);
-void             gfTypeList_Destroy   (ULTokenTypeList* irList);
+void             gfTypeList_Destroy   (ULTokenTypeList* iList);
 
-ULTokenType*     gfTypeList_Allocate  (ULTokenTypeList* irList, int iCount);
+ULTokenType*     gfTypeList_Allocate  (ULTokenTypeList* iList, int iCount);
 
-void             gfTypeList_Push      (ULTokenTypeList* irList, ULTokenType* iItem);
-void             gfTypeList_PushValue (ULTokenTypeList* irList, ULTokenType iItem);
-ULTokenType*     gfTypeList_Pop       (ULTokenTypeList* irList);
-ULTokenType      gfTypeList_PopValue  (ULTokenTypeList* irList);
-ULTokenType*     gfTypeList_Peek      (ULTokenTypeList* irList);
-ULTokenType      gfTypeList_PeekValue (ULTokenTypeList* irList);
+void             gfTypeList_Push      (ULTokenTypeList* iList, ULTokenType* iItem);
+void             gfTypeList_PushValue (ULTokenTypeList* iList, ULTokenType iItem);
+ULTokenType*     gfTypeList_Pop       (ULTokenTypeList* iList);
+ULTokenType      gfTypeList_PopValue  (ULTokenTypeList* iList);
+ULTokenType*     gfTypeList_Peek      (ULTokenTypeList* iList);
+ULTokenType      gfTypeList_PeekValue (ULTokenTypeList* iList);
 
-void             gfTypeList_Reserve   (ULTokenTypeList* irList, int iCapacity);
-void             gfTypeList_Clear     (ULTokenTypeList* irList);
+void             gfTypeList_Reserve   (ULTokenTypeList* iList, int iCapacity);
+void             gfTypeList_Clear     (ULTokenTypeList* iList);
 
 
 
 ULTokenList* gfTList_Create   (int iCapacity);
-void         gfTList_Destroy  (ULTokenList* irList);
+void         gfTList_Destroy  (ULTokenList* iList);
 
-ULToken*     gfTList_Allocate (ULTokenList* irList, int iCount);
+ULToken*     gfTList_Allocate (ULTokenList* iList, int iCount);
 
-void         gfTList_Push     (ULTokenList* irList, ULToken* iItem);
-ULToken*     gfTList_Pop      (ULTokenList* irList);
-ULToken*     gfTList_Peek     (ULTokenList* irList);
+void         gfTList_Push     (ULTokenList* iList, ULToken* iItem);
+ULToken*     gfTList_Pop      (ULTokenList* iList);
+ULToken*     gfTList_Peek     (ULTokenList* iList);
 
-void         gfTList_Reserve  (ULTokenList* irList, int iCapacity);
-void         gfTList_Clear    (ULTokenList* irList);
+void         gfTList_Reserve  (ULTokenList* iList, int iCapacity);
+void         gfTList_Clear    (ULTokenList* iList);
 
 
 
 
 ULSyntaxNodeList* gfSNList_Create   (int iCapacity);
-void              gfSNList_Destroy  (ULSyntaxNodeList* irList);
+void              gfSNList_Destroy  (ULSyntaxNodeList* iList);
 
-ULSyntaxNode*     gfSNList_Allocate (ULSyntaxNodeList* irList, int iCount);
+ULSyntaxNode*     gfSNList_Allocate (ULSyntaxNodeList* iList, int iCount);
 
-void              gfSNList_Push     (ULSyntaxNodeList* irList, ULSyntaxNode* iItem);
-ULSyntaxNode*     gfSNList_Pop      (ULSyntaxNodeList* irList);
-ULSyntaxNode*     gfSNList_Peek     (ULSyntaxNodeList* irList);
+void              gfSNList_Push     (ULSyntaxNodeList* iList, ULSyntaxNode* iItem);
+ULSyntaxNode*     gfSNList_Pop      (ULSyntaxNodeList* iList);
+ULSyntaxNode*     gfSNList_Peek     (ULSyntaxNodeList* iList);
 
-void              gfSNList_Reserve  (ULSyntaxNodeList* irList, int iCapacity);
-void              gfSNList_Clear    (ULSyntaxNodeList* irList);
+void              gfSNList_Reserve  (ULSyntaxNodeList* iList, int iCapacity);
+void              gfSNList_Clear    (ULSyntaxNodeList* iList);
 
 
 //
@@ -339,7 +339,6 @@ typedef enum ULSyntaxNodeType
 		UL_SYN_LocalIdentifier,
 		UL_SYN_GlobalIdentifier,
 		UL_SYN_MemberIdentifier,
-		//UL_SYN_FunctionIdentifier,
 		UL_SYN_Word,
 	
 		UL_SYN_HostObject,

@@ -8,6 +8,8 @@
 #include <wchar.h>
 #include <assert.h>
 #include <memory.h>
+#include <stdarg.h>
+
 
 #define nullptr 0
 size_t _msize(void* iPtr);
@@ -18,7 +20,9 @@ size_t _msize(void* iPtr);
 //int wcsindexof(wchar_t* dataset, int datasetLength, wchar_t* target, int targetLen);
 
 
+
 DataNode gDataNode_Null;
+
 
 
 DataNode::DataNode()
@@ -26,6 +30,7 @@ DataNode::DataNode()
 	///this->Init(DN_T_Undefined, DN_VT_Null);
 	
 	this->Ref = nullptr;
+	//this->Self = *this;
 	//this->Ref = gfDataNode_Create();
 	//gfDataNode_Init_1(this->Ref);
 }
@@ -116,7 +121,7 @@ DataNode::operator float    ()
 };
 DataNode::operator double   ()
 {
-	throw "NI";
+	return gfDataNode_GetValueF64(this->Ref, nullptr);
 };
 
 
@@ -198,6 +203,17 @@ bool             DataNode::operator!()
 //	//
 //	//throw "NI";
 //}
+DataNodeValue::DataNodeValue()
+{
+	HERE;
+};
+DataNodeValue::operator double()
+{
+	double oValue = gfDNValue_GetF64(this);///*((double*)&_TgtNode->Value.Data);
+	HERE;
+	return oValue;
+};
+
       DataNodeStruct&  DataNode::operator[](char* iPath)
 {
 	throw "NI";
@@ -211,6 +227,10 @@ const DataNodeStruct&  DataNode::operator[](char* iPath) const
 
       DataNodeStruct&  DataNode::operator[](wchar_t* iPath)
 {
+	if(iPath[0] == '@')
+	{
+		HERE;
+	}
 	if(this->Ref == nullptr) this->Ref = gfDataNode_Create();
 	
 	DataNodeStruct* _DNPtr = gfDataNode_GetNodeByPath(this->Ref, iPath, true, true);
@@ -218,10 +238,10 @@ const DataNodeStruct&  DataNode::operator[](char* iPath) const
 	if(_DNPtr != nullptr)
 	{
 		return *_DNPtr;
-		
 	}
 	else
 	{
+		HERE;
 		return gDataNodeStruct_Null;
 	}
 }
@@ -530,13 +550,14 @@ const DataNodeStruct&  DataNode::operator[](wchar_t* iPath) const
 
 DataNodeStruct::DataNodeStruct(char*    iValue)
 {
+	gfDataNode_Init_1(this);
 	throw "NI";
 };
 DataNodeStruct::DataNodeStruct(wchar_t* iValue)
 {
-	///gfDataNode_SetValueWSZ(this, nullptr, iValue);
-	///gfDataNode_Create();
-	throw "NI";
+	gfDataNode_Init_1(this);
+	gfDataNode_SetValueWSZ(this, nullptr, iValue);
+	//throw "NI";
 };
 DataNodeStruct::DataNodeStruct(int      iValue)
 {
@@ -550,7 +571,8 @@ DataNodeStruct::DataNodeStruct(float    iValue)
 };
 DataNodeStruct::DataNodeStruct(double   iValue)
 {
-	throw "NI";
+	gfDataNode_Init_1(this);
+	gfDataNode_SetValueF64(this, nullptr, iValue);
 };
 
 //DataNodeStruct::operator DataNodeStruct*   ()
@@ -563,7 +585,10 @@ DataNodeStruct::operator char*    ()
 };
 DataNodeStruct::operator wchar_t* ()
 {
-	throw "NI";
+	wchar_t* oValue = gfDNValue_GetWStrPtr(&this->Value);
+	
+	HERE;
+	return oValue;
 };
 DataNodeStruct::operator int      ()
 {
@@ -571,35 +596,58 @@ DataNodeStruct::operator int      ()
 };
 DataNodeStruct::operator float    ()
 {
-	throw "NI";
+	float oValue = gfDataNode_GetValueF32(this, nullptr);
+	return oValue;
 };
 DataNodeStruct::operator double   ()
 {
-	throw "NI";
+	double oValue = gfDataNode_GetValueF64(this, nullptr);
+	return oValue;
 };
 
 DataNodeStruct& DataNodeStruct::operator= (const DataNodeStruct& iNode)
 {
-	
 	this->Value.Type = iNode.Value.Type;
-	
 
-
-	memcpy(&this->Value,&iNode.Value, sizeof(this->Value) * sizeof(wchar_t)); ///~~ need to copy 'pointed' contents;
-	///memcpy(&this->Value,iNode.Value, sizeof(this->Value) * sizeof(wchar_t));
-	
-	//*((wchar_t*)&this->Value) = *(wchar_t*)iNode.Value;
-	//this->Value = *(wchar_t*)&iNode.Value;
+	memcpy(&this->Value,&iNode.Value, sizeof(this->Value) * sizeof(wchar_t));
+	//memcpy(&this->Value,iNode.Value, sizeof(this->Value) * sizeof(wchar_t));
 	
 	return *this;
 }
 
 
 
-
+DataNodeValue&  DataNode::GetValue(int iIndex)
+{
+	DataNodeValue* oValue = nullptr;
+	{
+		DataNodeValue* cValue = &this->Ref->Value; int cVi = 0; while(cValue != nullptr)
+		{
+			if(cVi == iIndex) {oValue = cValue; break;}
+			cValue = gfDNValue_GetNext(cValue);
+			cVi ++;
+		}
+	}
+	assert(oValue != nullptr);
+	
+	return *oValue;
+}
 DataNodeStruct&  DataNode::Create(wchar_t* iPath)
 {
-	return (*this)[iPath];
+	DataNodeStruct& oNode = (*this)[iPath];
+	{
+		gfDataNode_UpdateState(&oNode, false);
+	}
+	return oNode;
+}
+void DataNode::Get(wchar_t* iPath, wchar_t* iFormat, ...)
+{
+	va_list _VArgs;
+	va_start(_VArgs, iFormat);
+	
+	gfDataNode_GetValuesVA(this->Ref, iPath, iFormat, _VArgs);
+	
+	va_end(_VArgs);
 }
 void DataNode::Save(wchar_t* iPath)
 {
