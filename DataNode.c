@@ -21,7 +21,7 @@ static int gf_BreakpointFunction(int iNum){return iNum;}
 #define STOP  gf_BreakpointFunction(1 / gf_BreakpointFunction(0))
 #define WTFE(idMsg) STOP;
 
-#define dfCheckMissing(idNode) assert(idNode->Type != DN_T_Attribute_Missing && idNode->Type != DN_T_Element_Missing);
+#define dfCheckMissing(idNode) assert(idNode != nullptr && idNode->Type != DN_T_Attribute_Missing && idNode->Type != DN_T_Element_Missing);
 #define dTypeListInitialCapacity   4
 
 DataNodeStruct gDataNodeStruct_Null;
@@ -110,6 +110,8 @@ void   gfDNValue_GetWStr (DataNodeValue* iValue, wchar_t* iDstBuf, size_t iMaxLe
 char*    gfDNValue_GetStrPtr  (DataNodeValue* iValue)
 {
 	STOP;
+	
+	return nullptr;
 }
 wchar_t* gfDNValue_GetWStrPtr (DataNodeValue* iValue)
 {
@@ -122,7 +124,7 @@ wchar_t* gfDNValue_GetWStrPtr (DataNodeValue* iValue)
 		{
 			STOP;
 		}
-		oStrPtr = _IsPtr ? *(wchar_t**)iValue->Data : STOP;///&iValue->Data;
+		oStrPtr = _IsPtr ? *(wchar_t**)iValue->Data : iValue->Data;
 	}
 	
 	return oStrPtr;
@@ -138,10 +140,7 @@ DataNodeTypeList*    gfDNTypeList_Create(wchar_t* iTypeListString)
 		oList->Items    = malloc(sizeof(DataNodeTypeList) * dTypeListInitialCapacity);
 		oList->Count    = 0;
 		oList->Capacity = dTypeListInitialCapacity;
-		
-		///~~ i32,f64;
-		
-		
+
 		cStrLenReminder = wcslen(iTypeListString);
 		
 		cTypeStr = iTypeListString; while(cTypeStr[0] != L'\0')
@@ -228,28 +227,21 @@ void                 gfDNChildren_Reserve  (DataNodeStruct* iParentNode, int iCa
 {
 	if(iCapacity <= iParentNode->ChildCapacity) return;
 	
+	
 	{
 		size_t _OldSize, _NewSize;
-		DataNodeStruct *_ItemsOldPtr = iParentNode->Children, *_ItemsNewPtr;//, _ItemsNewPtr;
-		///_NewPtr = realloc((void*)(irCollection->Items), iCapacity);
+		DataNodeStruct *_ItemsOldPtr = iParentNode->Children, *_ItemsNewPtr;
 		
 		int _NeedCapacity = (int)(iCapacity * dDataNodeCollectionCapacityMultiplier);
-		size_t _NeedSize = _NeedCapacity * sizeof(DataNodeStruct); //, _Size;
-		
-		//_OldSize = _ItemsOldPtr != nullptr ? _msize(_ItemsOldPtr) : 0;
-		 
+		size_t _NeedSize = _NeedCapacity * sizeof(DataNodeStruct);
 		
 		_ItemsNewPtr = (iParentNode->Children == nullptr ? malloc(_NeedSize) : realloc(iParentNode->Children, _NeedSize));
 		
-		//_NewSize = _msize(_ItemsNewPtr);
-			
 		assert(_ItemsNewPtr != nullptr);
 		
 		
 		iParentNode->Children      = _ItemsNewPtr;
 		iParentNode->ChildCapacity = _NeedCapacity;
-		
-		
 		
 		if(true)
 		{
@@ -315,26 +307,17 @@ void                 gfDNAttributes_Reserve  (DataNodeStruct* iParentNode, int i
 	
 	{
 		size_t _OldSize, _NewSize;
-		DataNodeStruct *_ItemsOldPtr = iParentNode->Attributes, *_ItemsNewPtr;//, _ItemsNewPtr;
-		///_NewPtr = realloc((void*)(irCollection->Items), iCapacity);
+		DataNodeStruct *_ItemsOldPtr = iParentNode->Attributes, *_ItemsNewPtr;
 		
 		int _NeedCapacity = (int)(iCapacity * dDataNodeCollectionCapacityMultiplier);
 		size_t _NeedSize = _NeedCapacity * sizeof(DataNodeStruct); //, _Size;
 		
-		//_OldSize = _ItemsOldPtr != nullptr ? _msize(_ItemsOldPtr) : 0;
-		 
-		
 		_ItemsNewPtr = (iParentNode->Attributes == nullptr ? malloc(_NeedSize) : realloc(iParentNode->Attributes, _NeedSize));
 		
-		//_NewSize = _msize(_ItemsNewPtr);
-			
 		assert(_ItemsNewPtr != nullptr);
-		
 		
 		iParentNode->Attributes      = _ItemsNewPtr;
 		iParentNode->AttrCapacity = _NeedCapacity;
-		
-		
 		
 		if(true)
 		{
@@ -434,70 +417,6 @@ void gfDataNode_AppendMember(DataNodeStruct* iNode, ULSyntaxNode* iSyntaxNode, U
 	
 }
 
-//
-//void gfDataNode_SetNodeValue(DataNodeStruct* iNode, ULSyntaxNode* iSynNode, ULContext* iULC)
-//{
-//	ULToken* _Token = &iULC->Lexer->Tokens->Items[iSynNode->BegToken];
-//	
-//	wchar_t* _TokenStr = &iULC->Lexer->Buffer[_Token->Offset];
-//	size_t _TokenLen = _Token->Length;// + 40;
-//	DataNodeValueType _ValueType;
-//	
-//	assert(_TokenLen >= 1);
-//		
-//	_ValueType; switch(iSynNode->Type)
-//	{
-//		case UL_SYN_Number     : 
-//		case UL_SYN_NumFloat64 : {double _Value; int _ReadCount = swscanf_s(_TokenStr, L"%lf", &_Value); *((double*)&iNode->Value) = _Value; _ValueType = DN_VT_Float64; if(_ReadCount < 1 || _ReadCount > 20) STOP; break;}
-//		case UL_SYN_NumFloat32 : {float  _Value; int _ReadCount = swscanf_s(_TokenStr, L"%f",  &_Value); *((float*) &iNode->Value) = _Value; _ValueType = DN_VT_Float32; if(_ReadCount < 1 || _ReadCount > 20) STOP; break;}
-//		
-//		
-//		case UL_SYN_NumInvalid : _ValueType = DN_VT_NumInvalid; STOP; break;
-//		case UL_SYN_NumInt32   : {int    _Value; int _ReadCount = swscanf_s(_TokenStr, L"%d",  &_Value); *((int*) &iNode->Value) = _Value; _ValueType = DN_VT_Int32; if(_ReadCount < 1 || _ReadCount > 20) STOP; break;}
-//		
-//		case UL_SYN_String     :
-//		{
-//			size_t _TokenLenWOQ, _TokenLenWOQZ; bool _IsNeededHeapAlloc;
-//			wchar_t* _TokenStrWOQ;
-//			wchar_t* _StrPtr;
-//			
-//			assert(_Token->Length >= 2); ///~~ quotes included;
-//		
-//			_TokenLen = _Token->Length;// + 40;
-//			_TokenLenWOQ  = _TokenLen - 2; ///~~ without quotes;
-//			_TokenLenWOQZ = _TokenLenWOQ + 1;  ///~~ without quotes but with a null terminator;
-//			_IsNeededHeapAlloc = _TokenLenWOQZ >= dDataNodeValueMaxLength;
-//			
-//			_Token = &iULC->Lexer->Tokens->Items[iSynNode->BegToken];
-//			_TokenStr = &iULC->Lexer->Buffer[_Token->Offset];
-//			_TokenStrWOQ = _TokenStr + 1; ///~~ skip opening quote;
-//			
-//			
-//			
-//			if(_IsNeededHeapAlloc)
-//			{
-//				_StrPtr = malloc(_TokenLenWOQZ * sizeof(wchar_t));
-//				
-//				memcpy(&iNode->Value, &_StrPtr, sizeof(void*));
-//				
-//				_ValueType = DN_VT_StringPtr;
-//			}
-//			else                   {_StrPtr = (wchar_t*)&iNode->Value;                            _ValueType = DN_VT_String;}
-//			
-//			wcsncpy_s(_StrPtr, _TokenLenWOQZ, _TokenStrWOQ, _TokenLenWOQ);
-//			
-//			//(*(wchar_t*)_StrPtr)[]
-//			
-//			//this->Value[_TokenLen] = '\0';
-//			
-//			break;
-//		}
-//		
-//		default : STOP;
-//	}
-//	
-//	iNode->Value.Type = _ValueType;
-//}
 void gfDataNode_SetNodeValue(DataNodeValue* iNodeValue, ULSyntaxNode* iSynNode, ULContext* iULC)
 {
 	ULToken* _Token = &iULC->Lexer->Tokens->Items[iSynNode->BegToken];
@@ -603,12 +522,7 @@ void gfDataNode_FromULSyntaxNode(DataNodeStruct* iNode, ULSyntaxNode* iSyntaxNod
 	if(iSyntaxNode == nullptr) WTFE("Non-null node expected");
 	///if(iSyntaxNode->Children == nullptr || iSyntaxNode->Children->Count == 0) WTFE("Empty node specified");
 	if(iSyntaxNode->Children == nullptr || iSyntaxNode->Children->Count == 0) return;
-	
-	
-	///if(iSyntaxNode->Type != UL_SYN_Expression) WTFE("Expression syntax node is expected");
-	///if(iSyntaxNode->Type != UL_SYN_FunctionBlock) WTFE("Expected function block as node type");
-	
-	
+		
 	if(iSyntaxNode->Type == UL_SYN_Expression)
 	{
 		int _ListCount, cLi; wchar_t* _NodeName = nullptr;
@@ -618,9 +532,6 @@ void gfDataNode_FromULSyntaxNode(DataNodeStruct* iNode, ULSyntaxNode* iSyntaxNod
 		
 		#define dfIsType(idNode,idType) (idNode->Type == idType)
 		#define dfIsSingleton(idNode)   (idNode->Children != nullptr && idNode->Children->Count == 1)
-		
-		
-		///_List1     = &idSyntaxNode->Children->Items[idChildIndex]; if(!dIsType(_List1,     UL_SYN_List) || !dIsSingleton(_List1)) {_Err = 1; WTFE("1?");}\
 		 
 		#define dfGetList(idSyntaxNode,idListIndex,irdListNode) \
 		{\
@@ -687,8 +598,7 @@ void gfDataNode_FromULSyntaxNode(DataNodeStruct* iNode, ULSyntaxNode* iSyntaxNod
 	else if(iSyntaxNode->Type == UL_SYN_ParenthesisBlock || iSyntaxNode->Type == UL_SYN_BraceBlock || iSyntaxNode->Type == UL_SYN_Root)
 	{
 		int _EEc, cEi;
-	
-		///~~ Document?;
+		
 		if(iNode->Children == nullptr) gfDNChildren_Init(iNode);
 		if(iSyntaxNode->Children == nullptr) WTFE("?");
 		
@@ -700,46 +610,24 @@ void gfDataNode_FromULSyntaxNode(DataNodeStruct* iNode, ULSyntaxNode* iSyntaxNod
 			
 			cExpNode = &iSyntaxNode->Children->Items[cEi]; if(cExpNode->Type != UL_SYN_Expression) continue;
 			
-			if(wcscmp((wchar_t*)&iNode->Name,L"ChA4") == 0)/// && this->Children->Count >= 2)
-			{
-				HERE;
-			}
-			
 			if(cIsAttr) {cDataNode = gfDNAttributes_Allocate (iNode, 1); gfDataNode_Init_2(cDataNode, DN_T_Attribute); cDataNode->Parent = iNode; gfDataNode_FromULSyntaxNode(cDataNode, cExpNode, iULC);}
 			else        {cDataNode = gfDNChildren_Allocate   (iNode, 1); gfDataNode_Init_2(cDataNode, DN_T_Element);   cDataNode->Parent = iNode; gfDataNode_FromULSyntaxNode(cDataNode, cExpNode, iULC);}
 		}
 	}
-	/*else if(iSyntaxNode->Type == UL_SYN_GroupingBlock)
-	{
-		
-		HERE;
-	}*/
 	else
 	{
 		WTFE("Expected file, function block or expression as node type");
 	}
-	
-	///iSyntaxNode->
-	
-	HERE;
-	///iSyntaXNode
 }
 
 DataNodeStruct* gfDataNode_FromString(wchar_t* iBuffer)
 {
 	DataNodeStruct* oNode;
 	ULContext* _ULC = gfULCtx_Create(iBuffer, wcslen(iBuffer),true);
-	//{
-	//	gfLexCtx_ParseBuffer(_ULC->Lexer);
-	//	gfLexCtx_ProcessPairs(_ULC->Lexer);
-	//	
-	//	gfParser_ParseTokens(_ULC->Parser);
-	//}
-
+	
 	oNode = gfDataNode_Create();
 	{
-		gfDataNode_FromULSyntaxNode(oNode, _ULC->Parser->RootNode, _ULC);//, DN_T_Test);
-		///gfULCtx_Destroy(_ULC);
+		gfDataNode_FromULSyntaxNode(oNode, _ULC->Parser->RootNode, _ULC);
 	}
 	
 	gfULCtx_Destroy(_ULC);
@@ -768,27 +656,6 @@ DataNodeStruct* gfDataNode_GetChildByNameAndIndex_2(DataNodeStruct* iNode, wchar
 	return &gDataNodeStruct_Null;
 }
 
-
-
-///bool gfSplitPath(wchar_t* iName, size_t iNameSize, wchar_t iPath)
-//#define dfSplitPath() \
-//\
-//	wchar_t _ChildName[dDataNodeNameMaxLength];\
-//	wchar_t* _SubPath = nullptr;\
-//	{\
-//		int _PathLen = (int)wcslen(iPath), _DelimIndex = wcsindexof(iPath, (int)wcslen(iPath), L"/", 1);\
-//		\
-//		wcsncpy_s((wchar_t*)&_ChildName, sizeof(_ChildName) / sizeof(wchar_t), iPath, _DelimIndex != -1 ? _DelimIndex : _PathLen);\
-//		\
-//		if(_DelimIndex != -1)\
-//		{\
-//			if(!iDoAllowSubPath) STOP;\
-//			_SubPath = &iPath[_DelimIndex + 1];\
-//		}\
-//	}
-//
-//
-
 DataNodeStruct* gfDataNode_GetNodeByPath(DataNodeStruct* iNode, wchar_t* iPath, bool iDoAllowSubPath, bool iDoCreateMissing)
 {
 	if   (iPath == nullptr) return iNode;
@@ -810,16 +677,11 @@ DataNodeStruct* gfDataNode_GetNodeByPath(DataNodeStruct* iNode, wchar_t* iPath, 
 			}
 			_IsChildQuery = _ChildOrAttrName[0] != '@';
 		}
-		
-		///dfSplitPath();
 
 		if(_IsChildQuery)
 		{
 			if(iNode->Children != nullptr)
 			{
-				///bool _IsChildFound = false;
-				
-				///int _CCc = iNode->Children->Count, cCi = 0; for(; cCi < _CCc; cCi ++)
 				int cCi = 0; for(; cCi < iNode->ChildCount; cCi ++)
 				{
 					DataNodeStruct* cChild = &iNode->Children[cCi];
@@ -827,18 +689,9 @@ DataNodeStruct* gfDataNode_GetNodeByPath(DataNodeStruct* iNode, wchar_t* iPath, 
 					if(wcscmp((wchar_t*)&cChild->Name, (wchar_t*)&_ChildOrAttrName) == 0)
 					{
 						oNode = _SubPath == nullptr ? cChild : gfDataNode_GetNodeByPath(cChild, _SubPath, iDoAllowSubPath, iDoCreateMissing);
-						
-						//if(_SubPath != nullptr)
-						//{
-						//	oNode = gfDN_GetNodeByPath(cChild, _SubPath, iDoCreateMissing);
-						//}
-						//else
-						//{
-						//	oNode = cChild;
-						//}
+
 						break;
 					}
-					///if(cChild->Name 
 				}
 			}
 			else
@@ -987,15 +840,9 @@ void     gfDataNode_End(DataNodeStruct** irNode)
 	HERE;
 }
 
-
-
 void     gfDataNode_SetName     (DataNodeStruct* iNode, wchar_t* iName)
 {
 	wcsncpy_s((wchar_t*)&iNode->Name, _countof(iNode->Name), iName, _TRUNCATE);
-	
-	HERE;
-	///gfDN_
-	///STOP;
 }
 void     gfDataNode_SetValueSZ  (DataNodeStruct* iNode, wchar_t* iPath, char*    iValue){STOP;}
 void     gfDataNode_SetValueWSZ (DataNodeStruct* iNode, wchar_t* iPath, wchar_t* iValue)
@@ -1020,8 +867,6 @@ void     gfDataNode_SetValueWSZ (DataNodeStruct* iNode, wchar_t* iPath, wchar_t*
 	
 	///*((wchar_t*)&_TgtNode->Value) = iValue;
 	
-	
-	
 	STOP;
 }
 void     gfDataNode_SetValueI32 (DataNodeStruct* iNode, wchar_t* iPath, int      iValue)
@@ -1031,8 +876,6 @@ void     gfDataNode_SetValueI32 (DataNodeStruct* iNode, wchar_t* iPath, int     
 	*((int*)&_TgtNode->Value.Data) = iValue;
 	
 	_TgtNode->Value.Type = DN_VT_Int32;
-	
-	HERE;
 }
 void     gfDataNode_SetValueF32 (DataNodeStruct* iNode, wchar_t* iPath, float    iValue)
 {
@@ -1041,8 +884,6 @@ void     gfDataNode_SetValueF32 (DataNodeStruct* iNode, wchar_t* iPath, float   
 	*((float*)&_TgtNode->Value.Data) = iValue;
 	
 	_TgtNode->Value.Type = DN_VT_Float32;
-	
-	HERE;
 }
 void     gfDataNode_SetValueF64 (DataNodeStruct* iNode, wchar_t* iPath, double    iValue)
 {
@@ -1051,8 +892,6 @@ void     gfDataNode_SetValueF64 (DataNodeStruct* iNode, wchar_t* iPath, double  
 	*((double*)&_TgtNode->Value.Data) = iValue;
 	
 	_TgtNode->Value.Type = DN_VT_Float64;
-	
-	HERE;
 }
 
 wchar_t* gfDataNode_GetName     (DataNodeStruct* iNode){STOP; return nullptr;}
@@ -1068,56 +907,23 @@ void     gfDataNode_GetValuesVA   (DataNodeStruct* iNode, wchar_t* iPath, wchar_
 	
 	dfCheckMissing(_TgtNode);
 	
-	
-	
 	_Types = gfDNTypeList_Create(iFormat);
-	
-	//va_start(_VArgs, iFormat);
 	{
-		//float* cValF32;
-		//int*   cValI32;
-		
-		
-		
 		DataNodeValue* cValue = &_TgtNode->Value; for(cVi = 0; cVi < _Types->Count; cVi ++)
 		{
 			DataNodeValueType cType = _Types->Items[cVi]; switch(cType)
 			{
-				/*case DN_VT_Int32   : cValI32 = va_arg(_ArgPtr, float*); *cValI32 = 42; break;
-				case DN_VT_Float32 : cValF32 = va_arg(_ArgPtr, int*);   *cValF32 = 42; break;
-				*/
-				///case DN_VT_Int32   : cValI32 = va_arg(_ArgPtr, int*); *cValI32 = 42; break;
 				case DN_VT_Int32   : *va_arg(_VArgs,    int*) = gfDNValue_GetI32(cValue); break;
 				case DN_VT_Float32 : *va_arg(_VArgs,  float*) = gfDNValue_GetF32(cValue); break;
 				case DN_VT_Float64 : *va_arg(_VArgs, double*) = gfDNValue_GetF64(cValue); break;
 				
-				case DN_VT_String  :
-				{
-					//gfDNValue_GetStr (cValue, va_arg(_VArgs, char*),    va_arg(_VArgs, size_t)); break;
-					char*    cBuf = va_arg(_VArgs, char*);    size_t cLen = va_arg(_VArgs, size_t); gfDNValue_GetStr (cValue, cBuf, cLen); break;
-				}
-				case DN_VT_WString :
-				{
-					///gfDNValue_GetWStr(cValue, va_arg(_VArgs, wchar_t*), va_arg(_VArgs, size_t)); break;
-					
-					wchar_t* cBuf = va_arg(_VArgs, wchar_t*); size_t cLen = va_arg(_VArgs, size_t); gfDNValue_GetWStr(cValue, cBuf, cLen); break;
-				}
-				//case DN_VT_WString : *va_arg(_VArgs, wchar_t*) = gfDNValue_GetWStr(cValue); break;
+				case DN_VT_String  : {char*    cBuf = va_arg(_VArgs, char*);    size_t cLen = va_arg(_VArgs, size_t); gfDNValue_GetStr (cValue, cBuf, cLen); break;}
+				case DN_VT_WString : {wchar_t* cBuf = va_arg(_VArgs, wchar_t*); size_t cLen = va_arg(_VArgs, size_t); gfDNValue_GetWStr(cValue, cBuf, cLen); break;}
 			}
 			
 			cValue = cValue->NextPtr;
-			HERE;
 		}
-		
-		/*assert(_TgtNode->Value.Type == DN_VT_Int32);
-		
-		oValue = *((int*)&_TgtNode->Value.Data);
-		*/
 	}
-	//va_end(_VArgs);
-		
-	HERE;
-	
 	gfDNTypeList_Destroy(_Types);
 }
 void     gfDataNode_GetValues   (DataNodeStruct* iNode, wchar_t* iPath, wchar_t* iFormat, ...)
@@ -1211,48 +1017,16 @@ void gfWString_Reserve(WString* iString, int iNewCapacity)
 	_DataNewPtr = realloc(iString->Data, _NewSize);
 	assert(_DataNewPtr != nullptr);
 	
-	iString->Data = _DataNewPtr;
+	iString->Data     = _DataNewPtr;
 	iString->Capacity = _NewSize / sizeof(wchar_t);
 }
 
-//
-//int gfStringReserve(wchar_t** irBuffer, int iCurrentCapacity, int iNewCapacity)
-//{
-//	///if(*irBuffer == nullptr)
-//	///int _NeedCapacity = (int)(iCapacity * 1);
-//	int _NewSize = iNewCapacity * sizeof(wchar_t);
-//	
-//	
-//	wchar_t* _BufferNewPtr = realloc(*irBuffer, _NewSize);
-//	
-//	assert(_BufferNewPtr != nullptr);
-//		
-//	*irBuffer = _BufferNewPtr;
-//	
-//	return _NewSize / sizeof(wchar_t);
-//}
 int gfWString_Write(WString* iString, wchar_t* iSrcBuffer, int iSrcLength)
 {
-	
 	int _LenStep = iSrcLength == -1 ? (int)wcslen(iSrcBuffer) + 1 : iSrcLength;/// - 1;
 	
-	if(iSrcLength == -1)
-	{
-		HERE;
-	}
-	/*if(iSrcLength == _TRUNCATE)
-	{
-		int _Length = ;
-		HERE;
-	}
-	*/
-	HERE;
-	gfWString_Reserve(iString, iString->Length + _LenStep);///_LenStep); ///~~ SZ?;
-	///iString->
-	///HERE;
+	gfWString_Reserve(iString, iString->Length + _LenStep);
 	
-	
-	///wcsncpy_s(_StrPtr, _TokenLenWOQZ, _TokenStrWOQ, _TokenLenWOQ);
 	wcsncpy_s(iString->Data + iString->Length, iSrcLength, iSrcBuffer, _LenStep);
 	
 	iString->Length += _LenStep - 1;
@@ -1261,26 +1035,24 @@ int gfWString_Write(WString* iString, wchar_t* iSrcBuffer, int iSrcLength)
 }
 int gfWString_WriteLine(WString* iString, wchar_t* iSrcBuffer, int iSrcLength, int iIndent)
 {
-	HERE;
+	STOP;
 	
 	return 0;
 }
-///int gfDataNode_ToString(DataNodeStruct* iNode, wchar_t** irBuffer, int iBufferCapacity, int iBufferSize, int iIndent)
 int gfDataNode_ToString(DataNodeStruct* iNode, WString* iString, int iIndent)
 {
-	///gfStringWriteLine(irBuffer, iBufferCapacity, iBufferSize, L"", );
 	//if(iBufferCapacity == 0) iBufferCapacity = 64;
 	//if(iBufferSize >= iBufferCapacity - 1)
 	//{
 	//	iBufferCapacity = 64;
 	//	
-	//	gfReserveString(irBuffer, iBufferCapacity * 2);
+	//	gfReserveString(iBuffer, iBufferCapacity * 2);
 	//}
 	int _NameLenZ;
-	wchar_t _Tab[] = L"\t";
-	wchar_t _ExpDelim[] = L";\r\n";
-	wchar_t _BlockOpener[] = L"\r\n{\r\n";
-	wchar_t _BlockCloser[] = L"}";
+	wchar_t _Tab         [] = L"\t";
+	wchar_t _ExpDelim    [] = L";\r\n";
+	wchar_t _BlockOpener [] = L"\r\n{\r\n";
+	wchar_t _BlockCloser [] = L"}";
 	
 	
 	int cIi = 0; for(; cIi < iIndent; cIi ++)

@@ -148,9 +148,9 @@ struct DataNodeValue
 	#endif
 };
 
-DataNodeValue* gfDNValue_AllocNext(DataNodeValue* irValue);
-void           gfDNValue_ClearAll(DataNodeValue* irValue);
-DataNodeValue* gfDNValue_GetNext(DataNodeValue* irValue);
+DataNodeValue* gfDNValue_AllocNext (DataNodeValue* iValue);
+void           gfDNValue_ClearAll  (DataNodeValue* iValue);
+DataNodeValue* gfDNValue_GetNext   (DataNodeValue* iValue);
 
 
 int    gfDNValue_GetI32  (DataNodeValue* iValue);
@@ -225,7 +225,7 @@ void gfDataNode_InitStatic();
 void gfDataNode_UpdateState(DataNodeStruct* iNode, bool iIsMissing);
 
 void gfDataNode_FromULSyntaxNode (DataNodeStruct* iNode, ULSyntaxNode* iSyntaxNode, ULContext* iULC);///, DataNodeType iNodeType)
-void gfDataNode_ToULSyntaxNode   (DataNodeStruct* iNode,  ULSyntaxNode* irSyntaxNode);
+void gfDataNode_ToULSyntaxNode   (DataNodeStruct* iNode,  ULSyntaxNode* iSyntaxNode);
 DataNodeStruct* gfDataNode_FromString(wchar_t* iBuffer);
 int gfDataNode_ToString(DataNodeStruct* iNode, WString* iString, int iIndent);
 
@@ -271,9 +271,6 @@ int      gfDataNode_GetValueI32Or (DataNodeStruct* iNode, wchar_t* iPath, int   
 float    gfDataNode_GetValueF32Or (DataNodeStruct* iNode, wchar_t* iPath, float    iOrValue);
 double   gfDataNode_GetValueF64Or (DataNodeStruct* iNode, wchar_t* iPath, double   iOrValue);
 
-///int gfDataNode_ToString(DataNodeStruct* iNode, wchar_t** irBuffer, int iIndent);
-///int gfDataNode_ToString(DataNodeStruct* iNode, wchar_t** irBuffer, int iBufferCapacity, int iBufferSize, int iIndent);
-
 extern DataNodeStruct gDataNodeStruct_Null;
 
 
@@ -288,22 +285,14 @@ class DataNode;
 class DataNode
 {
 	public:
-	//
-	//wchar_t Name[dDataNodeNameMaxLength];
-	//wchar_t Value[dDataNodeValueMaxLength];
-	//
-	DataNodeStruct* Ref;	
+	DataNodeStruct* Ref;
 	
 	 DataNode();
-	 // DataNode(DataNodeType iNodeType);
-	 //DataNode(DLSyntaxNode* iSyntaxNode);
 	~DataNode();
 	
-	//DataNode(DataNodeStruct iValue);
 	DataNode(DataNodeStruct& iValue);
 	DataNode(DataNodeStruct* iValue);
 	
-	//DataNode(DataNodeStruct iValue);
 	DataNode(char*    iValue);
 	DataNode(wchar_t* iValue);
 	DataNode(int      iValue);
@@ -313,7 +302,6 @@ class DataNode
 	operator DataNodeStruct& ();
 	operator DataNodeStruct* ();
 	
-	//operator DataNodeStruct ();
 	operator char*    ();
 	operator wchar_t* ();
 	operator int      ();
@@ -322,7 +310,6 @@ class DataNode
 	
 	//bool             operator= ();
 	bool             operator! ();
-
 
 	//      DataNodeStruct*  operator[](wchar_t* iPath);
 	//const DataNodeStruct*  operator[](wchar_t* iPath) const;
@@ -340,12 +327,13 @@ class DataNode
 	
 	DataNodeStruct& Create(wchar_t* iPath);
 	
+	bool Contains(wchar_t* iPath);
 	void Get(wchar_t* iPath, wchar_t* iFormat, ...);
 	
 	void Load(wchar_t* iPath);
 	void Save(wchar_t* iPath);
 	
-	int  ToStringPreview(wchar_t* irBuffer, int iBufferInitialSize);
+	int  ToStringPreview(wchar_t* iBuffer, int iBufferInitialSize);
 	int  ToStringPreview(wchar_t** irBuffer);
 	//DataNode& GetChildByNameAndIndex(char* iName, int iIndex);
 	//DataNode& GetChildByNameAndIndex(wchar_t* iName, int iIndex);

@@ -210,20 +210,6 @@ void              gfSNList_Reserve  (ULSyntaxNodeList* iList, int iCapacity);
 void              gfSNList_Clear    (ULSyntaxNodeList* iList);
 
 
-//
-///ULTokenRefList* gfTRList_Create   ();
-//void            gfTRList_Destroy  (ULTokenRefList* irList);
-//void            gfTRList_Push     (ULTokenList* irList, ULToken* iToken);
-//ULToken*        gfTRList_Pop      (ULTokenList* irList);
-//ULToken*        gfTRList_Peek     (ULTokenList* irList);
-
-//
-//struct LexerState
-//{
-
-//};
-
-
 struct LexerState
 {
 	int               Position;
@@ -266,16 +252,14 @@ void          gfLexCtx_Destroy          (LexerContext* iCtx);
 
 ULToken*      gfLexCtx_AllocateToken    (LexerContext* iCtx);
 ULToken*      gfLexCtx_AllocateTokens   (LexerContext* iCtx, int iCount);
-///void          gfLexCtx_AddTokens        (LexerContext* iCtx, ULTokenList* iNewTokens, ULTokenList* irTokens);
 void          gfLexCtx_AddToken         (LexerContext* iCtx, ULTokenType iType, void* iValue, int iBegOffs, int iEndOffsOrLength);
 void          gfLexCtx_AddSyntaxTokens  (LexerContext* iCtx, ULTokenType iTokenType, bool iIsTerminated);
 void          gfLexCtx_ProcessPairs     (LexerContext* iCtx);///, ULTokenList* iTokens);
-void          gfLexCtx_LinkTokens       (LexerContext* iCtx, ULToken* irOpenerToken, ULToken* irCloserToken);
+void          gfLexCtx_LinkTokens       (LexerContext* iCtx, ULToken* iOpenerToken, ULToken* iCloserToken);
 
 ULTokenList*  gfLexCtx_ParseBuffer      (LexerContext* iCtx);
 
 void          gfLexCtx_ParseNextTokens  (LexerContext* iCtx);
-///void          gfLexCtx_SkipNonTokens    (LexerContext* iCtx);
 
 void          gfLexCtx_ParseWhitespaces (LexerContext* iCtx);
 void          gfLexCtx_ParseBracket     (LexerContext* iCtx);
@@ -445,21 +429,21 @@ struct ULSyntaxParser
 };
 
 ULSyntaxParser* gfParser_Create      (ULContext* iULC);
-void            gfParser_Destroy     (ULSyntaxParser* irParser);
-void            gfParser_Init        (ULSyntaxParser* irParser, ULTokenList* iTokens);
-ULSyntaxNode*   gfParser_ParseTokens (ULSyntaxParser* irParser);
+void            gfParser_Destroy     (ULSyntaxParser* iParser);
+void            gfParser_Init        (ULSyntaxParser* iParser, ULTokenList* iTokens);
+ULSyntaxNode*   gfParser_ParseTokens (ULSyntaxParser* iParser);
 
-void            gfParser_AddNode     (ULSyntaxParser* irParser, ULSyntaxNodeType iNodeType, ULToken* iToken);
-ULSyntaxNode*   gfParser_OpenNode    (ULSyntaxParser* irParser, ULSyntaxNodeType iNodeType, ULToken* iToken);
-ULSyntaxNode*   gfParser_CloseNode   (ULSyntaxParser* irParser, ULSyntaxNodeType iNodeType);
-
-
+void            gfParser_AddNode     (ULSyntaxParser* iParser, ULSyntaxNodeType iNodeType, ULToken* iToken);
+ULSyntaxNode*   gfParser_OpenNode    (ULSyntaxParser* iParser, ULSyntaxNodeType iNodeType, ULToken* iToken);
+ULSyntaxNode*   gfParser_CloseNode   (ULSyntaxParser* iParser, ULSyntaxNodeType iNodeType);
 
 
 
 
 
-__declspec(noinline) void gfULSyntaxNodeType_ToString(char* irStr, ULSyntaxNodeType iValue);
+
+
+__declspec(noinline) void gfULSyntaxNodeType_ToString(char* iStr, ULSyntaxNodeType iValue);
 
 
 

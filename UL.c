@@ -42,12 +42,12 @@ ULContext* gfULCtx_Create           (wchar_t* iBuffer, size_t iBufferLength, boo
 	}
 	return oULC;
 }
-void       gfULCtx_Destroy          (ULContext* irULC)
+void       gfULCtx_Destroy          (ULContext* iULC)
 {
-	if(irULC->Lexer  != nullptr) gfLexCtx_Destroy(irULC->Lexer);
-	if(irULC->Parser != nullptr) gfParser_Destroy(irULC->Parser);
+	if(iULC->Lexer  != nullptr) gfLexCtx_Destroy(iULC->Lexer);
+	if(iULC->Parser != nullptr) gfParser_Destroy(iULC->Parser);
 	
-	free(irULC);
+	free(iULC);
 }
 
 
@@ -110,7 +110,6 @@ void gfToken_Init          (ULToken* iToken)
 	
 	iToken->Type     = UL_TOK_Undefined;
 	iToken->Value[0] = L'\0';
-	///iToken->Pair     = nullptr;
 	iToken->PairId   = -1;
 }
 void gfToken_Cleanup       (ULToken* iToken)
@@ -541,18 +540,10 @@ void          gfLexCtx_AddToken         (LexerContext* iCtx, ULTokenType iTokenT
 		gfToken_Init(_Token);
 		
 		_Token->Type     = iTokenType;
-		///_Token->Value[0] = 0;///iValue;///~~ not used?;
 		
 		_Token->Id       = iCtx->Tokens->Count - 1;
 		_Token->Offset   = _IsBegOffsSpecified ? iBegOffs : iCtx->State->Position;
-		///_Token->Length   = _IsBegOffsSpecified ? (iEndOffsOrLength != -1 ? iEndOffsOrLength - iBegOffs : 0) : iEndOffsOrLength;
 		_Token->Length   = iEndOffsOrLength != -1 ?  (_IsBegOffsSpecified ? iEndOffsOrLength - iBegOffs : iEndOffsOrLength) : 0;/// iEndOffsOrLength;
-		///_Token->Length   = _TokenLength;
-		
-		
-		///_Token->Fragment = -1;
-		///_Token->Pair     = nullptr;
-		///_Token->Pair     = -1;
 		
 		if(_Token->Length != 0)
 		{
@@ -574,42 +565,16 @@ void          gfLexCtx_AddToken         (LexerContext* iCtx, ULTokenType iTokenT
 			_Token->Value[(_SizeLimit / sizeof(wchar_t))] = 0;///~~ SZ;
 		}
 	}
-	/*if(_IsBegOffsSpecified)
-	{
-		if(iEndOffsOrLength != -1)
-		{
-			iCtx->State->Position = iEndOffsOrLength;
-		}
-		else
-		{
-			STOP;///~~ to check. Multiple tokens for single position;
-		}
-	}
-	else
-	{
-		
-	}*/
-	//iList->Count
+	
 	if(_Token->Length != 0)
 	{
 		iCtx->State->Position = _Token->Offset + _Token->Length;
 	}
 }
-void          gfLexCtx_AddTokens        (LexerContext* iCtx, ULTokenList* iNewTokens, ULTokenList* irTokens)
-{
-	STOP;
-	///gfLexCtx_ProcessSyntax(iCtx, iNewTokens);
-}
-void          gfLexCtx_AddSyntaxTokens  (LexerContext* iCtx, ULTokenType iTokenType, bool iIsTerminated)///, ULTokenStack irStack)
+void          gfLexCtx_AddSyntaxTokens  (LexerContext* iCtx, ULTokenType iTokenType, bool iIsTerminated)
 {
 	ULTokenTypeStack* _TypeStack = iCtx->State->TypeStack;
 
-	//if(_TypeStack->Count == 0)
-	//{
-	//	gfTypeList_PushValue(_TypeStack, UL_TOK_File);
-
-	//	gfLexCtx_AddToken(iCtx, UL_TOK_File_Opener, nullptr, -1, -1);
-	//}
 	if(gfToken_IsWhitespace(iTokenType) || gfToken_IsGarbage(iTokenType))
 	{
 		if(_TypeStack->Count == 0 || *gfTypeList_Peek(_TypeStack) != UL_TOK_Whitespace)
@@ -653,10 +618,6 @@ void          gfLexCtx_AddSyntaxTokens  (LexerContext* iCtx, ULTokenType iTokenT
 					gfTypeList_PushValue(_TypeStack, UL_TOK_Expect_Expression);
 					continue;
 				}
-				//case UL_TOK_File  :
-				//{
-				//	goto LABEL_UL_TOK_Undefined;
-				//}
 				case UL_TOK_Expect_Expression :
 				{
 					gfTypeList_Pop(_TypeStack);
@@ -970,19 +931,12 @@ void          gfLexCtx_ProcessPairs     (LexerContext* iCtx)
 	}
 	gfTList_Destroy(_SyntaxTree);
 }
-void          gfLexCtx_LinkTokens       (LexerContext* iCtx, ULToken* irOpenerToken, ULToken* irCloserToken)
+void          gfLexCtx_LinkTokens       (LexerContext* iCtx, ULToken* iOpenerToken, ULToken* iCloserToken)
 {
 	///~~ Note that we are re-using ULTokenList as token stack. It contains a value array - not references;
-	///~~ ULTokenRefList can be used as reference stack, but it needs additional (duplicated) functions;
 	
-	//ULToken* _Opener = &iCtx->Tokens->Items[iOpenerToken->Id];
-	//ULToken* _Closer = &iCtx->Tokens->Items[iCloserToken->Id];
-	//
-	irCloserToken->PairId = irOpenerToken->Id;
-	irOpenerToken->PairId = irCloserToken->Id;
-	
-	//_Opener->PairId = _Closer _Closer->Id;
-	//_Closer->PairId = _Opener->Id;
+	iCloserToken->PairId = iOpenerToken->Id;
+	iOpenerToken->PairId = iCloserToken->Id;
 }
 
 
@@ -995,172 +949,75 @@ ULTokenList*  gfLexCtx_ParseBuffer      (LexerContext* iCtx)
 	
 	while(iCtx->State->Position < iCtx->BufferLength)
 	{
-		//ULTokenList* cTokenGroup = gfLexCtx_ParseNextTokens(iCtx);
 		gfLexCtx_ParseNextTokens(iCtx);
-		
-		///gfLexCtx_ProcessSyntax(iNewTokens, ioTokens, (iCtx.State as GenericCodeLexerState).TokenStack);
-		///ioTokens.AddRange(iNewTokens);
-			
-		//gfLexCtx_AddToken(iCtx, UL_TOK_Garbage, nullptr, -1,-1);
-		
-		
-		
-		//if(cTokenGroup->Count == 1 && cTokenGroup->Items[0] == nullptr) WTFE("It must be 'continue'?");
-		
-		//gfLexCtx_AddTokens(iCtx, cTokenGroup, oTokens);
-		//gfLexCtx_AddTokens(iCtx, cTokenGroup);
 	}
+	
 	HERE;
-
-	///return oTokens;
 	return iCtx->Tokens;
 }
 
 void          gfLexCtx_ParseNextTokens  (LexerContext* iCtx)
 {
-	///ULTokenList* oTokens;
-	
 	LexerState* _LexerState = iCtx->State;
-	
-	
+
 	if(_LexerState->Position >= iCtx->BufferLength) WTFE("return null?");
-	
-	
-	///oTokens = gfTList_Create(1);
-	
-	
 	{
 		wchar_t cChar = iCtx->Buffer[_LexerState->Position];
 		wchar_t nChar = _LexerState->Position < iCtx->BufferLength - 1 ? iCtx->Buffer[_LexerState->Position + 1] : L'\0';///~~ new Char()??;
 
-		
 		if(_LexerState->TypeStack->Count > 0 && gfTypeList_PeekValue(_LexerState->TypeStack) == UL_TOK_String)
 		{
 			gfLexCtx_ParseString(iCtx);
-			///gfTList_Push(oTokens, gfLexCtx_ParseString(iCtx));
 		}
 		else
 		{
-			//if(gfLexCtx_IsWhitespace(cChar)) gfTList_Push(oTokens, gfLexCtx_ParseWhitespaces(iCtx));
 			if(gfLexCtx_IsWhitespace(cChar)) gfLexCtx_ParseWhitespaces(iCtx);
 			else
 			{
 				if(cChar == L'/' && (nChar == L'/' || nChar == L'*'))
 				{
-					///if   (nChar == L'/') gfTList_Push(oTokens, gfLexCtx_ParseGarbage(iCtx));
 					if   (nChar == L'/') gfLexCtx_ParseGarbage(iCtx);
 					else
 					{
 						gfLexCtx_AddToken(iCtx, UL_TOK_Word, nullptr, -1,0);
-						//{
-							///_Word->Offset = iCtx->
-						//}
-						///ULToken* _Word = gfTList_Alloc(oTokens, 1);
-						//char& _ = iCtx->Buffer[0];
-						
-						//gfToken_Init();
-						//ULToken* _Word = gfToken_Init
-						///gfTList_Push(new TokenInfo(TokenType.Word, iCtx.Offset, ++iCtx.Offset));
 					}
 				}
 				else
 				{
-					///if      (cChar == '#' || AEULLexer.IsDecimalDigit(cChar) || ((cChar == '+' || cChar == '-') && ((iCtx.Buffer.Length - iCtx.Offset > 1) && AEULLexer.IsDecimalDigit(iCtx.Buffer[iCtx.Offset + 1]))))
 					if      (cChar == L'#' || gfLexCtx_IsDecimalDigit(cChar) || ((cChar == L'+' || cChar == L'-') && ((iCtx->BufferLength - iCtx->State->Position > 1) && gfLexCtx_IsDecimalDigit(iCtx->Buffer[iCtx->State->Position + 1]))))
 					{
 						gfLexCtx_ParseNumber(iCtx);
 					}
 					else if (cChar == L'"')               gfLexCtx_ParseString(iCtx);
-					///~~else if (cChar == L"'")          gfLexCtx_ParseChar(iCtx);
 					else if (gfLexCtx_IsBracket(cChar))   gfLexCtx_ParseBracket(iCtx);
 					
 					else if (cChar == L';')               gfLexCtx_AddToken(iCtx, UL_TOK_Expression_Delimiter, nullptr, -1,1);
-					//else if (cChar == ":")               oTokens.Add(new Token(TokenType.Colon,     cChar, iCtx.Position, iCtx.Position++));
 					else if (cChar == L',')               gfLexCtx_AddToken(iCtx, UL_TOK_ListItem_Delimiter,   nullptr, -1,1);
 					else if (cChar == L'\'')              gfLexCtx_AddToken(iCtx, UL_TOK_Atom_Delimiter, nullptr, -1,1);
 
-					//else if (cChar == L'$')
-					//{
-					//	if(nChar == L'-' || nChar == L'+') /// $-1, $+2 etc
-					//	{
-					//		gfLexCtx_ParseList(iCtx);
-					//	}
-					//	//else if(gfLexCtx_IsLetter(nChar))
-					//	else if(iswalpha(nChar))
-					//	{
-					//		iswupper(nChar) ? gfLexCtx_ParseHostObject(iCtx) : gfLexCtx_ParseType(iCtx);
-					//	}
-					//	//else if(nChar == '-' || nChar == '+')
-					//	
-					//	else gfLexCtx_ParseHostObject(iCtx);
-					//}
 					else
 					{
-						if(iCtx->State->Position >= 295)
-						{
-							HERE;
-						}
-						
 						gfLexCtx_ParseIdentifier(iCtx);
-
-						///if(cToken.Type != TokenType.Word) oTokens.Add(new TokenInfo{Type = TokenType.ListOpener, Offset = cToken.Offset, Length = 0});
-						//oTokens.Add(cToken);
-						///if(cToken.Type != TokenType.Word) oTokens.Add(new TokenInfo{Type = TokenType.ListCloser, Offset = cToken.Offset + cToken.Length, Length = 0});
 					}
-					
-					//else                           throw new Exception("Token error at " + iCtx.Position);
-
 				}
-				//return this.ParseWord();
 			}
 		}
 	}
-	//else
-	///if(_LexerState->Position == iCtx->BufferLength)
 	
-	if(iCtx->Buffer[_LexerState->Position] == '\0')
+	if(iCtx->Buffer[_LexerState->Position] == '\0') ///~~ note that position has already been incremented;
 	{
-		///~~ note that position has already been incremented;
-		
-		if(_LexerState->TypeStack->Count != 0)
+		int cTi; for(cTi = 0; cTi < _LexerState->TypeStack->Count; cTi ++)
 		{
-			WTFE("Not expected");
+			ULTokenType cType = _LexerState->TypeStack->Items[cTi];
+			
+			if(cType == UL_TOK_Brace || cType == UL_TOK_Parenthesis || cType == UL_TOK_Bracket)
+			{
+				WTFE("Syntax error: block not closed");
+			}
 		}
-		//if(_LexerState->TypeStack->Count > 1)
-		//{
-		//	gfLexCtx_AddSyntaxTokens(iCtx, UL_TOK_File_Closer, true);
-		//	
-		//	
-		//	///gfLexCtx_AddToken(iCtx, UL_TOK_F, nullptr, -1,0);
-		//}
-		//
-		//if(_LexerState->TypeStack->Count == 1 && *gfTypeList_Peek(_LexerState->TypeStack) == UL_TOK_File)
-		//{
-		//	gfLexCtx_AddToken(iCtx, UL_TOK_File_Closer, nullptr, -1, -1);
-		//	gfTypeList_Pop(_LexerState->TypeStack);
-		//	
-		//	HERE;
-		//}
-		//else
-		//{
-		//	WTFE("Not expected");
-		//}
-		
-		HERE;
+		gfLexCtx_AddSyntaxTokens(iCtx, UL_TOK_Root_Closer, true);
 	}
-	///if(_LexerState->Position >= iCtx->BufferLength) WTFE("?");
 }
-//void          gfLexCtx_SkipNonTokens    (LexerContext* iCtx)
-//{
-//	while(iCtx->State->Position < iCtx->BufferLength)
-//	{
-//		wchar_t cChar = iCtx->Buffer[iCtx->State->Position];
-//		if(cChar != L' ' && cChar != L'\t' && cChar != L'\r' && cChar != L'\n') break;
-//
-//		iCtx->State->Position ++;
-//	}
-//}
-
 
 void          gfLexCtx_ParseWhitespaces (LexerContext* iCtx)
 {
@@ -1415,72 +1272,7 @@ void          gfLexCtx_ParseString      (LexerContext* iCtx)
 	gfLexCtx_AddToken(iCtx, UL_TOK_String, nullptr, _BegOffs, cIsTerminated ? _EndOffs : _BegOffs - 1);
 	
 }
-///void          gfLexCtx_ParseString      (LexerContext* iCtx)
-//{
-//	ULTokenTypeStack* _Stack = iCtx->State->TypeStack;
-//	
-//	bool _IsStringOpen = _Stack->Count != 0 && _Stack->Items[_Stack->Count - 1] == UL_TOK_String;
-//
-//	int _BegOffs = iCtx->State->Position;
-//	int _EndOffs = _BegOffs;
-//	
-//
-//	while(_EndOffs < iCtx->BufferLength)
-//	{
-//		int cBegSearch = _EndOffs + (_IsStringOpen ? 0 : 1);
-//		_EndOffs = cBegSearch + wcsindexof(&iCtx->Buffer[cBegSearch], (int)iCtx->BufferLength - _EndOffs, L"\"",  1);
-//		
-//		///_EndOffs = iCtx.Buffer.IndexOf('"', _EndOffs + (_IsStringOpen ? 0 : 1));
-//
-//		if(_EndOffs == -1)
-//		{
-//			_EndOffs = (int)iCtx->BufferLength;
-//			//_EndOffs = _BegOffs - 1; //~~ mark token as unterminated;
-//
-//			//_Is
-//			_IsStringOpen = true;
-//
-//			//if(!_LexerState.IsStringOpen) _LexerState.IsStringOpen = true;
-//
-//			///if(!_IsStringOpen) _IsStringOpen = true;
-//			//else throw new Exception("???");
-//
-//			break;
-//		}
-//		else
-//		{
-//			bool _IsQuoteCancelled = false;
-//			{
-//				///for(int cPos = _EndOffs - 1; cPos >= 0; cPos --, _IsQuoteCancelled =! _IsQuoteCancelled)
-//				///{
-//				///    if(iCtx.Buffer[cPos] != '\\') break;
-//					
-//				///}
-//				int cPos; for(cPos = _EndOffs - 1; cPos >= 0; cPos --)
-//				{
-//					if(iCtx->Buffer[cPos] == L'\\')
-//					{
-//						_IsQuoteCancelled =! _IsQuoteCancelled;
-//					}
-//					else break;
-//				}
-//			}
-//
-//			_EndOffs ++;
-//
-//			if(_IsQuoteCancelled) {/**_LexerState.IsStringOpen = false;*/   continue;}
-//			///else                  {if(_LexerState.IsStringOpen == true) _LexerState.IsStringOpen = false; break;}
-//			else                  {if(_IsStringOpen) _IsStringOpen = false; break;}
-//		}
-//	}
-//
-//	///iCtx.Offset = _EndOffs;
-//
-//	//return new TokenInfo(TokenType.String, _BegOffs, _IsStringOpen ? _BegOffs - 1 : _EndOffs){Value = iCtx.Buffer.Substring(_BegOffs + 1, _EndOffs - _BegOffs - (_IsStringOpen ? 1 : 2))};
-//	///return new TokenInfo(TokenType.String, _BegOffs, _IsStringOpen ? _BegOffs - 1 : _EndOffs){Value = iCtx.Buffer.Substring(_BegOffs + 1, Math.Max(0, _EndOffs - _BegOffs - 2))};
-//	
-//	gfLexCtx_AddToken(iCtx, UL_TOK_String, nullptr, _BegOffs, (_IsStringOpen ? _BegOffs - 1 : _EndOffs));
-//}
+
 void          gfLexCtx_ParseChar        (LexerContext* iCtx)
 {
 	STOP;
@@ -1495,23 +1287,13 @@ void          gfLexCtx_ParseGarbage     (LexerContext* iCtx)
 
 	if(_FwdS[1] == '/')
 	{
-		//~~ single-line garbage;
+		///~~ single-line garbage;
 
 		_BegOffs = iCtx->State->Position;/// + 2;
 		_EndOffs = _BegOffs; while(_EndOffs < iCtx->BufferLength && !gfLexCtx_IsNewline(iCtx->Buffer[_EndOffs])) _EndOffs ++;
 
-		///iCtx->State->Position = _EndOffs;
-
-
-		///if(_FwdS == "//~~")
 		if(_FwdS[0] == L'/' && _FwdS[1] == L'/' && _FwdS[2] == L'~' && _FwdS[3] == L'~')
 		{
-			//oTokens.Add(new Token(TokenType.Garbage, iCtx.Buffer.Substring(_BegOffs, 2), _BegOffs, _BegOffs + 2, true));
-			//oTokens.Add(new Token(TokenType.Comment, iCtx.Buffer.Substring(_BegOffs + 2, _EndOffs - (_BegOffs + 2)), _BegOffs + 2, _EndOffs, true));
-
-			//oTokens.Add(new TokenInfo(TokenType.Comment, iCtx.Buffer.Substring(_BegOffs, _EndOffs - _BegOffs), _BegOffs, _EndOffs, true));
-			
-			///oTokens.Add(new TokenInfo(TokenType.Comment, _BegOffs, _EndOffs));
 			gfLexCtx_AddToken(iCtx, UL_TOK_Comment, nullptr, _BegOffs, _EndOffs);
 		}
 		else
@@ -1542,28 +1324,27 @@ bool          gfLexCtx_IsSpecial        (wchar_t iChar){return !gfLexCtx_IsBrack
 
 
 struct $__UL_SyntaxNode__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
-void          gfSNode_Init              (ULSyntaxNode* irNode, ULSyntaxNodeType iNodeType, ULToken* iToken, int iChildCapacity)
+void          gfSNode_Init              (ULSyntaxNode* iNode, ULSyntaxNodeType iNodeType, ULToken* iToken, int iChildCapacity)
 {
-	irNode->Type   = iNodeType;
-	irNode->Token_ = iToken;
-	irNode->Role   = UL_SEM_Unknown;
+	iNode->Type   = iNodeType;
+	iNode->Token_ = iToken;
+	iNode->Role   = UL_SEM_Unknown;
 	
-	irNode->Parent = nullptr;
+	iNode->Parent = nullptr;
 	
 	if(iToken != nullptr)
 	{
-		irNode->BegToken = iToken->Id;
-		///irNode->EndToken = iToken->PairId != -1 ? iToken->PairId : -1;
-		irNode->EndToken = iToken->PairId;
+		iNode->BegToken = iToken->Id;
+		iNode->EndToken = iToken->PairId;
 	}
 	else
 	{
-		irNode->BegToken = -1;
-		irNode->EndToken = -1;
+		iNode->BegToken = -1;
+		iNode->EndToken = -1;
 	}
 	
-	if(iChildCapacity != 0) {irNode->Children = gfSNList_Create(iChildCapacity); irNode->Children->Owner = irNode;}
-	else                     irNode->Children = nullptr;
+	if(iChildCapacity != 0) {iNode->Children = gfSNList_Create(iChildCapacity); iNode->Children->Owner = iNode;}
+	else                     iNode->Children = nullptr;
 }
 
 struct $__UL_SyntaxParser__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
@@ -1574,87 +1355,44 @@ ULSyntaxParser* gfParser_Create      (ULContext* iULC)
 
 	ULSyntaxParser* oParser = malloc(sizeof(ULSyntaxParser));
 	{
-		oParser->ULC      = iULC;
-		oParser->Position = -1;
-		oParser->Tokens   = nullptr;///iLexerContext->Tokens;
+		oParser->ULC       = iULC;
+		oParser->Position  = -1;
+		oParser->Tokens    = nullptr;
 		
 		oParser->RootNode  = nullptr;
 		oParser->TopNode   = nullptr;
-		//_Root = malloc(sizeof(ULSyntaxNode));
-		//{
-		//	gfSNode_Init(_Root, UL_SYN_FunctionBlock, nullptr, 1);
-		///*	_Root->Parent = nullptr;///~~ ???;
-		//
-		//
-		//	_Root->Type  = UL_SYN_FunctionBlock;
-		//	_Root->Token = nullptr;
-		//	
-		//	_Root->BegToken = -1;
-		//	_Root->EndToken = -1;
-		//	
-		//	_Root->Children = gfSNList_Create(1);*/
-		//}
-		//oParser->TopNode = _Root;
 	}
 	return oParser;
 }
-void            gfParser_Destroy     (ULSyntaxParser* irParser)
+void            gfParser_Destroy     (ULSyntaxParser* iParser)
 {
-	///if(irParser->Tokens  != nullptr) gfTList_Destroy(irParser->Tokens);
-	if(irParser->TopNode != nullptr)
+	if(iParser->TopNode != nullptr)
 	{
-		gfSNList_Destroy(irParser->TopNode->Children);
-		free(irParser->TopNode);
+		gfSNList_Destroy(iParser->TopNode->Children);
+		free(iParser->TopNode);
 	}
 }
-void            gfParser_Init        (ULSyntaxParser* irParser, ULTokenList* iTokens)
+void            gfParser_Init        (ULSyntaxParser* iParser, ULTokenList* iTokens)
 {
 	ULSyntaxNode* _Root;
 
-	irParser->Position = -1;
-	irParser->Tokens   = iTokens;
+	iParser->Position = -1;
+	iParser->Tokens   = iTokens;
 	
-	irParser->RootNode = nullptr;
-	irParser->TopNode = nullptr;
-	
-	///_Root = malloc(sizeof(ULSyntaxNode));
-	///{
-	///	gfSNode_Init(_Root, UL_SYN_FunctionBlock, nullptr, 1);
-	///}
-	///irParser->RootNode = _Root;
-	///irParser->TopNode  = _Root;
+	iParser->RootNode = nullptr;
+	iParser->TopNode  = nullptr;
 }
-ULSyntaxNode*   gfParser_ParseTokens (ULSyntaxParser* irParser)
+ULSyntaxNode*   gfParser_ParseTokens (ULSyntaxParser* iParser)
 {
-	gfParser_Init(irParser, irParser->ULC->Lexer->Tokens);
+	gfParser_Init(iParser, iParser->ULC->Lexer->Tokens);
 	
-	/*this.Position ++;
-
-			return (this.Position < this.Tokens.Count);
-	*/		
-	while(irParser->Position ++, irParser->Position < irParser->Tokens->Count)
+	while(iParser->Position ++, iParser->Position < iParser->Tokens->Count)
 	{
-		ULToken* cToken = &irParser->Tokens->Items[irParser->Position];
+		ULToken* cToken = &iParser->Tokens->Items[iParser->Position];
 
-		bool cIsTrash  = gfToken_IsGarbageSTX (cToken->Type);///cIsTrash = cToken.Type >= TokenType.Whitespace && cToken.Type <= TokenType.Comment;
-		bool cIsOpener = gfToken_IsOpener     (cToken->Type); ///bool cIsOpener = cToken.Type == TokenType.ExpressionOpener || cToken.Type == TokenType.ListOpener || cToken.Type == TokenType.ListItemOpener || cToken.Type == TokenType.ParenthesisOpener || cToken.Type == TokenType.BracketOpener || cToken.Type == TokenType.BraceOpener;
+		bool cIsTrash  = gfToken_IsGarbageSTX (cToken->Type);
+		bool cIsOpener = gfToken_IsOpener     (cToken->Type);
 		
-		if(cToken->Id >= 450)
-		{
-			HERE;
-		}
-
-
-		//ParenthesisOpener,
-		//BracketOpener,
-		//BraceOpener,
-
-		//FileOpener,
-		//BlockOpener,
-		//ExpressionOpener,
-		//ListOpener,
-		
-
 		if(cIsTrash) continue;
 
 		if(cIsOpener)
@@ -1674,123 +1412,83 @@ ULSyntaxNode*   gfParser_ParseTokens (ULSyntaxParser* irParser)
 				///default : printf("Token (type = %d) is skipped", cToken->Type); break;
 				default : WTFE("Opener token does not match any of syntax node type"); break;
 			}
-			gfParser_OpenNode(irParser, _NodeType, cToken);
+			gfParser_OpenNode(iParser, _NodeType, cToken);
 		}
 		else
 		{
 			switch(cToken->Type)
 			{
-				case UL_TOK_ListItem_Closer    : gfParser_CloseNode(irParser, UL_SYN_ListItem);     break;
-				case UL_TOK_List_Closer        : gfParser_CloseNode(irParser, UL_SYN_List);         break;
-				case UL_TOK_Expression_Closer  : gfParser_CloseNode(irParser, UL_SYN_Expression);   break;
+				case UL_TOK_ListItem_Closer    : gfParser_CloseNode(iParser, UL_SYN_ListItem);     break;
+				case UL_TOK_List_Closer        : gfParser_CloseNode(iParser, UL_SYN_List);         break;
+				case UL_TOK_Expression_Closer  : gfParser_CloseNode(iParser, UL_SYN_Expression);   break;
 				
-				case UL_TOK_Parenthesis_Closer : gfParser_CloseNode(irParser, UL_SYN_ParenthesisBlock); break;
-				case UL_TOK_Bracket_Closer     : gfParser_CloseNode(irParser, UL_SYN_BracketBlock);     break;
-				case UL_TOK_Brace_Closer       : gfParser_CloseNode(irParser, UL_SYN_BraceBlock);       break;
+				case UL_TOK_Parenthesis_Closer : gfParser_CloseNode(iParser, UL_SYN_ParenthesisBlock); break;
+				case UL_TOK_Bracket_Closer     : gfParser_CloseNode(iParser, UL_SYN_BracketBlock);     break;
+				case UL_TOK_Brace_Closer       : gfParser_CloseNode(iParser, UL_SYN_BraceBlock);       break;
 
-				///case UL_TOK_Root_Closer        : gfParser_CloseNode(irParser, UL_SYN_Root);          break;
-				
-				//case TokenType.ListItemCloser :
-				//{
+				///case UL_TOK_Root_Closer        : gfParser_CloseNode(iParser, UL_SYN_Root);          break;
 
-				//    break;
-				//}
+				case UL_TOK_Instruction   : gfParser_AddNode(iParser, UL_SYN_Instruction, cToken); break;
+				case UL_TOK_Label         : gfParser_AddNode(iParser, UL_SYN_Label,       cToken); break;
+				case UL_TOK_Pointer       : gfParser_AddNode(iParser, UL_SYN_Pointer,     cToken); break;
+				case UL_TOK_Word          : gfParser_AddNode(iParser, UL_SYN_Word,        cToken); break;
+				case UL_TOK_Number        : gfParser_AddNode(iParser, UL_SYN_Number,      cToken); break;
+				///case UL_TOK_InvalidNumber : gfParser_AddNode(iParser, UL_SYN_NumInvalid, cToken); break;
 
-				case UL_TOK_Instruction   : gfParser_AddNode(irParser, UL_SYN_Instruction, cToken); break;
-				case UL_TOK_Label         : gfParser_AddNode(irParser, UL_SYN_Label,       cToken); break;
-				case UL_TOK_Pointer       : gfParser_AddNode(irParser, UL_SYN_Pointer,     cToken); break;
-				case UL_TOK_Word          : gfParser_AddNode(irParser, UL_SYN_Word,        cToken); break;
-				case UL_TOK_Number        : gfParser_AddNode(irParser, UL_SYN_Number,      cToken); break;
-				///case UL_TOK_InvalidNumber : gfParser_AddNode(irParser, UL_SYN_NumInvalid, cToken); break;
+				///case UL_TOK_Int32   : gfParser_AddNode(iParser, UL_SYN_NumInt32,   cToken); break;
+				///case UL_TOK_Float32 : gfParser_AddNode(iParser, UL_SYN_NumFloat32, cToken); break;
+				///case UL_TOK_Float64 : gfParser_AddNode(iParser, UL_SYN_NumFloat64, cToken); break;
 
-				///case UL_TOK_Int32   : gfParser_AddNode(irParser, UL_SYN_NumInt32,   cToken); break;
-				///case UL_TOK_Float32 : gfParser_AddNode(irParser, UL_SYN_NumFloat32, cToken); break;
-				///case UL_TOK_Float64 : gfParser_AddNode(irParser, UL_SYN_NumFloat64, cToken); break;
-				
+				case UL_TOK_String           : gfParser_AddNode(iParser, UL_SYN_String, cToken); break;
+				case UL_TOK_Local_Ident       : gfParser_AddNode(iParser, UL_SYN_LocalIdentifier,       cToken); break;
+				case UL_TOK_Global_Ident      : gfParser_AddNode(iParser, UL_SYN_GlobalIdentifier,      cToken); break;
+				case UL_TOK_Reference_Ident   : gfParser_AddNode(iParser, UL_SYN_ReferenceIdentifier,   cToken); break;
+				case UL_TOK_Input_Ident       : gfParser_AddNode(iParser, UL_SYN_InputIdentifier,       cToken); break;
+				case UL_TOK_Output_Ident      : gfParser_AddNode(iParser, UL_SYN_OutputIdentifier,      cToken); break;
+				case UL_TOK_Member_Ident      : gfParser_AddNode(iParser, UL_SYN_MemberIdentifier,      cToken); break;
 
-
-				case UL_TOK_String           : gfParser_AddNode(irParser, UL_SYN_String, cToken); break;
-
-				
-				//case UL_TOK_Host_Object       : gfParser_AddNode(irParser, UL_SYN_HostObject,            cToken); break;
-				
-				//case UL_TOK_Identifier        : gfParser_AddNode(irParser, UL_SYN_Identifier,            cToken); break;
-				case UL_TOK_Local_Ident       : gfParser_AddNode(irParser, UL_SYN_LocalIdentifier,       cToken); break;
-				case UL_TOK_Global_Ident      : gfParser_AddNode(irParser, UL_SYN_GlobalIdentifier,      cToken); break;
-				case UL_TOK_Reference_Ident   : gfParser_AddNode(irParser, UL_SYN_ReferenceIdentifier,   cToken); break;
-				case UL_TOK_Input_Ident       : gfParser_AddNode(irParser, UL_SYN_InputIdentifier,       cToken); break;
-				case UL_TOK_Output_Ident      : gfParser_AddNode(irParser, UL_SYN_OutputIdentifier,      cToken); break;
-				case UL_TOK_Member_Ident      : gfParser_AddNode(irParser, UL_SYN_MemberIdentifier,      cToken); break;
-				//case UL_TOK_Function_Ident : gfParser_AddNode(irParser, UL_SYN_FunctionIdentifier,    cToken); break;
-
-				//case UL_TOK_Type              : gfParser_AddNode(irParser, UL_SYN_Type,                  cToken); break;
-				//case UL_TOK_Packed_Tuple      : gfParser_AddNode(irParser, UL_SYN_PackedTuple,           cToken); break;
-
-				//case TokenType.Space:
-
-
-				///default : throw new Exception("WTFE");
-				///default : Console.WriteLine("Token '" + cToken.Type.ToString() + "' was not handled"); break;
+				default : STOP;
 			}
 		}
 	}
-	return irParser->TopNode;
+	return iParser->TopNode;
 }
 
-void            gfParser_AddNode     (ULSyntaxParser* irParser, ULSyntaxNodeType iNodeType, ULToken* iToken)
+void            gfParser_AddNode     (ULSyntaxParser* iParser, ULSyntaxNodeType iNodeType, ULToken* iToken)
 {
 	ULSyntaxNode* _Node;
 
-	if(irParser->TopNode->Children == nullptr)
+	if(iParser->TopNode->Children == nullptr)
 	{
-		irParser->TopNode->Children        = gfSNList_Create(1);
-		irParser->TopNode->Children->Owner = irParser->TopNode;
+		iParser->TopNode->Children        = gfSNList_Create(1);
+		iParser->TopNode->Children->Owner = iParser->TopNode;
 	}
 	
-	_Node = gfSNList_Allocate(irParser->TopNode->Children, 1);
+	_Node = gfSNList_Allocate(iParser->TopNode->Children, 1);
 	{
 		gfSNode_Init(_Node, iNodeType, iToken, 0);
-		_Node->Parent = irParser->TopNode;
-		
-			
-		///oNode->Parent = nullptr;///~~ ???;
-		//
-		//oNode->Type  = iNodeType;
-		//oNode->Token = iToken;
-		//
-		//if(iToken != nullptr)
-		//{
-		//	oNode->BegToken = iToken->Id;
-		//	oNode->EndToken = iToken->Pair != nullptr ? iToken->Pair->Id : -1;
-		//}
-		//else
-		//{
-		//	oNode->BegToken = -1;
-		//	oNode->EndToken = -1;
-		//}
-		//oNode->Children = gfSNList_Create(0);
+		_Node->Parent = iParser->TopNode;
 	}
-	///return oNode;
 }
-ULSyntaxNode*   gfParser_OpenNode    (ULSyntaxParser* irParser, ULSyntaxNodeType iNodeType, ULToken* iToken)
+ULSyntaxNode*   gfParser_OpenNode    (ULSyntaxParser* iParser, ULSyntaxNodeType iNodeType, ULToken* iToken)
 {
 	ULSyntaxNode* oNode;
 	
-	irParser->TopNode->Children;
+	iParser->TopNode->Children;
 	
 	if(iNodeType == UL_SYN_List)
 	{
 		HERE;
 	}
 
-	if(irParser->RootNode == nullptr)
+	if(iParser->RootNode == nullptr)
 	{
-		assert(irParser->TopNode == nullptr);
+		assert(iParser->TopNode == nullptr);
 		
 		oNode = malloc(sizeof(ULSyntaxNode));
 		
-		irParser->RootNode = oNode;
-		irParser->TopNode  = oNode;
+		iParser->RootNode = oNode;
+		iParser->TopNode  = oNode;
 		
 		gfSNode_Init(oNode, UL_SYN_Root, iToken, 1);
 		{
@@ -1801,34 +1499,34 @@ ULSyntaxNode*   gfParser_OpenNode    (ULSyntaxParser* irParser, ULSyntaxNodeType
 	}
 	/*else
 	{*/
-		if(irParser->TopNode->Children == nullptr)
+		if(iParser->TopNode->Children == nullptr)
 		{
-			irParser->TopNode->Children        = gfSNList_Create(1);
-			irParser->TopNode->Children->Owner = irParser->TopNode;
+			iParser->TopNode->Children        = gfSNList_Create(1);
+			iParser->TopNode->Children->Owner = iParser->TopNode;
 		}
 		
-		oNode = gfSNList_Allocate(irParser->TopNode->Children, 1);
+		oNode = gfSNList_Allocate(iParser->TopNode->Children, 1);
 		{
 			gfSNode_Init(oNode, iNodeType, iToken, 0);
-			oNode->Parent = irParser->TopNode;
+			oNode->Parent = iParser->TopNode;
 		}
 		
-		irParser->TopNode = oNode;
+		iParser->TopNode = oNode;
 	//}
 	return oNode;
 }
-ULSyntaxNode*   gfParser_CloseNode   (ULSyntaxParser* irParser, ULSyntaxNodeType iNodeType)
+ULSyntaxNode*   gfParser_CloseNode   (ULSyntaxParser* iParser, ULSyntaxNodeType iNodeType)
 {
-	if(irParser->TopNode == nullptr) WTFE("?");
-	if(irParser->TopNode->Type != iNodeType) WTFE("Unmatched pair token");
+	if(iParser->TopNode == nullptr) WTFE("?");
+	if(iParser->TopNode->Type != iNodeType) WTFE("Unmatched pair token");
 	
 	/*if(iNodeType == UL_SYN_List)
 	{
 		HERE;
 	}*/
-	irParser->TopNode = irParser->TopNode->Parent;
+	iParser->TopNode = iParser->TopNode->Parent;
 	
-	return irParser->TopNode;
+	return iParser->TopNode;
 }
 
 
@@ -1839,12 +1537,11 @@ struct $__UL_005__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;
 struct $__UL_006__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
 struct $__UL_007__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
 
-void gfULSyntaxNodeType_ToString(char* irStr, ULSyntaxNodeType iValue)
+void gfULSyntaxNodeType_ToString(char* iStr, ULSyntaxNodeType iValue)
 {
 	switch (iValue)
 	{
-		///#define STR(r) case r: memcpy(irErrStr, L#r, sizeof(wchar_t) * 64); return
-		#define STR(r) case r: memcpy(irStr, #r, sizeof(char) * 64); return
+		#define STR(diR) case diR: memcpy(iStr, #diR, sizeof(char) * 64); return
 
 		STR(UL_SYN_Unknown);
 
