@@ -17,14 +17,8 @@ static int gf_BreakpointFunction(int iNum){return iNum;}
 #define HERE  gf_BreakpointFunction(0)
 #define STOP  gf_BreakpointFunction(1 / gf_BreakpointFunction(0))
 #define WTFE(idMsg) STOP
-
 ///size_t _msize(void* iPtr);
-
-
-struct $__UL_Context__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
-
-
-
+	
 ULContext* gfULCtx_Create           (wchar_t* iBuffer, size_t iBufferLength, bool iDoBuildAST)
 {
 	ULContext* oULC = malloc(sizeof(ULContext));
@@ -49,14 +43,7 @@ void       gfULCtx_Destroy          (ULContext* iULC)
 	
 	free(iULC);
 }
-
-
-
-
-struct $__UL_Token__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
-
-
-
+	
 int wcsindexof(wchar_t* iBuffer, int iBufferLen, wchar_t* iValue, int iValueLen)
 {
 	int cBufCi;
@@ -79,6 +66,7 @@ int wcsindexof(wchar_t* iBuffer, int iBufferLen, wchar_t* iValue, int iValueLen)
 	}
 	return -1;
 }
+	
 ///int memsearch(char* dataset, int datasetLength, char* target, int targetLen)
 //{
 //	for(int i = 0; i < datasetLength; i++)
@@ -130,7 +118,6 @@ bool gfToken_IsPaired      (ULTokenType iTokenType){return gfToken_IsOpener(iTok
 
 ///bool gfToken_IsOpener      (ULTokenType iTokenType){return iTokenType == UL_TOK_ListItem_Opener || iTokenType == UL_TOK_List_Opener || iTokenType == UL_TOK_Expression_Opener || iTokenType == UL_TOK_Parenthesis_Opener || iTokenType == UL_TOK_Bracket_Opener || iTokenType == UL_TOK_Brace_Opener || iTokenType == UL_TOK_File_Opener;}
 ///bool gfToken_IsCloser      (ULTokenType iTokenType){return iTokenType == UL_TOK_ListItem_Closer || iTokenType == UL_TOK_List_Closer || iTokenType == UL_TOK_Expression_Closer || iTokenType == UL_TOK_Parenthesis_Closer || iTokenType == UL_TOK_Bracket_Closer || iTokenType == UL_TOK_Brace_Closer || iTokenType == UL_TOK_File_Closer;}
-
 bool gfToken_IsOpener      (ULTokenType iTokenType){return (iTokenType >= UL_TOK_Root_Opener && iTokenType <= UL_TOK_ListItem_Opener) || iTokenType == UL_TOK_Brace_Opener || iTokenType == UL_TOK_Parenthesis_Opener || iTokenType == UL_TOK_Bracket_Opener;}
 bool gfToken_IsCloser      (ULTokenType iTokenType){return (iTokenType >= UL_TOK_Root_Closer && iTokenType <= UL_TOK_ListItem_Closer) || iTokenType == UL_TOK_Brace_Closer || iTokenType == UL_TOK_Parenthesis_Closer || iTokenType == UL_TOK_Bracket_Closer;}
 
@@ -139,11 +126,8 @@ bool gfToken_IsWhitespace  (ULTokenType iTokenType){return iTokenType >= UL_TOK_
 
 bool gfToken_IsGarbage     (ULTokenType iTokenType){return iTokenType == UL_TOK_Garbage || iTokenType == UL_TOK_Comment;}
 bool gfToken_IsGarbageSTX  (ULTokenType iTokenType){return iTokenType >= UL_TOK_Whitespace && iTokenType <= UL_TOK_Comment;}
-
-
-
-struct $__UL_TokenTypeList__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
-ULTokenTypeList*  gfTypeList_Create   (int iCapacity)
+	
+ULTokenTypeList*  gfTypeList_Create    (int iCapacity)
 {
 	ULTokenTypeList* oList = malloc(sizeof(ULTokenTypeList));
 	{
@@ -155,13 +139,13 @@ ULTokenTypeList*  gfTypeList_Create   (int iCapacity)
 	}
 	return oList;
 }
-void              gfTypeList_Destroy  (ULTokenTypeList* iList)
+void              gfTypeList_Destroy   (ULTokenTypeList* iList)
 {
 	if(iList->Items != nullptr) free(iList->Items);
 	
 	free(iList);
 }
-ULTokenType*      gfTypeList_Allocate (ULTokenTypeList* iList, int iCount)
+ULTokenType*      gfTypeList_Allocate  (ULTokenTypeList* iList, int iCount)
 {
 	gfTypeList_Reserve(iList, iList->Count + iCount);
 	
@@ -171,20 +155,20 @@ ULTokenType*      gfTypeList_Allocate (ULTokenTypeList* iList, int iCount)
 }
 
 
-void              gfTypeList_PushValue    (ULTokenTypeList* iList, ULTokenType iItem)
+void              gfTypeList_PushValue (ULTokenTypeList* iList, ULTokenType iItem)
 {
 	ULTokenType* _Item = gfTypeList_Allocate(iList,1);
 	
 	*_Item = iItem;
 	///iList->Items[iList->Count - 1] = iItem;
 }
-ULTokenType       gfTypeList_PopValue      (ULTokenTypeList* iList)
+ULTokenType       gfTypeList_PopValue  (ULTokenTypeList* iList)
 {
 	if(iList->Count <= 0) return nullptr;
 	
 	return iList->Items[-- iList->Count];
 }
-ULTokenType*      gfTypeList_Pop      (ULTokenTypeList* iList)
+ULTokenType*      gfTypeList_Pop       (ULTokenTypeList* iList)
 {
 	if(iList->Count <= 0) return nullptr;
 	
@@ -196,14 +180,14 @@ ULTokenType       gfTypeList_PeekValue (ULTokenTypeList* iList)
 	
 	return iList->Items[iList->Count - 1];
 }
-ULTokenType*      gfTypeList_Peek     (ULTokenTypeList* iList)
+ULTokenType*      gfTypeList_Peek      (ULTokenTypeList* iList)
 {
 	if(iList->Count <= 0) return nullptr;
 	
 	return &iList->Items[iList->Count - 1];
 }
 
-void              gfTypeList_Reserve  (ULTokenTypeList* iList, int iCapacity)
+void              gfTypeList_Reserve   (ULTokenTypeList* iList, int iCapacity)
 {
 	if(iCapacity <= iList->Capacity) return;
 	
@@ -240,14 +224,14 @@ void              gfTypeList_Reserve  (ULTokenTypeList* iList, int iCapacity)
 		iList->Capacity = _NeedCapacity;
 	}
 }
-void              gfTypeList_Clear    (ULTokenTypeList* iList)
+void              gfTypeList_Clear     (ULTokenTypeList* iList)
 {
 	iList->Count = 0;
 }
 
 
 
-struct $__UL_TokenList__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
+	
 ULTokenList*      gfTList_Create   (int iCapacity)
 {
 	ULTokenList* oTokenList = malloc(sizeof(ULTokenList));
@@ -354,7 +338,7 @@ void              gfTList_Clear    (ULTokenList* iList)
 }
 
 
-struct $__UL_SyntaxNodeList__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
+	
 ///ULSyntaxNodeList*  gfSNList_Create   (ULSyntaxNode* iOwner, int iCapacity)
 ULSyntaxNodeList* gfSNList_Create   (int iCapacity)
 {
@@ -459,7 +443,7 @@ void              gfSNList_Clear    (ULSyntaxNodeList* iList)
 }
 
 
-struct $__UL_LexerState__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
+	
 LexerState*   gfLState_Create  ()
 {
 	LexerState* oState = malloc(sizeof(LexerState));
@@ -475,7 +459,7 @@ void          gfLState_Destroy (LexerState* iState)
 	free(iState);
 }
 
-struct $__UL_LexerContext__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
+	
 LexerContext* gfLexCtx_Create           (ULContext* iULC, wchar_t* iBuffer, size_t iBufferLength)
 {
 	LexerContext* oCtx = malloc(sizeof(LexerContext));
@@ -1323,7 +1307,7 @@ bool          gfLexCtx_IsQuote          (wchar_t iChar){return iChar == L'"';}//
 bool          gfLexCtx_IsSpecial        (wchar_t iChar){return !gfLexCtx_IsBracket(iChar) && !gfLexCtx_IsQuote(iChar) && !gfLexCtx_IsWhitespace(iChar) && !gfLexCtx_IsPunctuation(iChar);}
 
 
-struct $__UL_SyntaxNode__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
+	
 void          gfSNode_Init              (ULSyntaxNode* iNode, ULSyntaxNodeType iNodeType, ULToken* iToken, int iChildCapacity)
 {
 	iNode->Type   = iNodeType;
@@ -1347,8 +1331,7 @@ void          gfSNode_Init              (ULSyntaxNode* iNode, ULSyntaxNodeType i
 	else                     iNode->Children = nullptr;
 }
 
-struct $__UL_SyntaxParser__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
-
+	
 ULSyntaxParser* gfParser_Create      (ULContext* iULC)
 {
 	ULSyntaxNode* _Root;
@@ -1447,7 +1430,7 @@ ULSyntaxNode*   gfParser_ParseTokens (ULSyntaxParser* iParser)
 				case UL_TOK_Output_Ident      : gfParser_AddNode(iParser, UL_SYN_OutputIdentifier,      cToken); break;
 				case UL_TOK_Member_Ident      : gfParser_AddNode(iParser, UL_SYN_MemberIdentifier,      cToken); break;
 
-				default : STOP;
+				default : break;
 			}
 		}
 	}
@@ -1530,13 +1513,7 @@ ULSyntaxNode*   gfParser_CloseNode   (ULSyntaxParser* iParser, ULSyntaxNodeType 
 }
 
 
-struct $__UL_002__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
-struct $__UL_003__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
-struct $__UL_004__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
-struct $__UL_005__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
-struct $__UL_006__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
-struct $__UL_007__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
-
+	
 void gfULSyntaxNodeType_ToString(char* iStr, ULSyntaxNodeType iValue)
 {
 	switch (iValue)

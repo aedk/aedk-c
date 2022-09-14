@@ -29,7 +29,6 @@ struct WString
 	int Capacity, Length;
 };
 
-void     gfWString_Reserve    (WString* iString, int iNewCapacity);
 WString* gfWString_Create     (int iInitialCapacity);
 void     gfWString_Destroy    (WString* iString);
 void     gfWString_Reserve    (WString* iString, int iNewCapacity);

@@ -35,8 +35,66 @@ DataNodeStruct gDataNodeStruct_Null;
 	default : STOP;\
 }
 
+	
+WString* gfWString_Create    (int iInitialCapacity)
+{
+	WString* oStr = malloc(sizeof(WString));
+	{
+		oStr->Data     = nullptr;
+		oStr->Capacity = 0;
+		oStr->Length   = 0;
+		
+		if(iInitialCapacity != 0)
+		{
+			gfWString_Reserve(oStr, iInitialCapacity);
+		}
+	}
+	return oStr;
+}
+void     gfWString_Destroy   (WString* iString)
+{
+	if(iString->Data != nullptr)
+	{
+		free(iString->Data);
+	}
+	free(iString);
+}
 
-struct $__DataNodeValue__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
+void     gfWString_Reserve   (WString* iString, int iNewCapacity)
+{
+	int _NewSize = iNewCapacity * sizeof(wchar_t);
+	
+	wchar_t* _DataNewPtr;
+	
+	if(_NewSize <= iString->Capacity) return;
+	
+	_DataNewPtr = realloc(iString->Data, _NewSize);
+	assert(_DataNewPtr != nullptr);
+	
+	iString->Data     = _DataNewPtr;
+	iString->Capacity = _NewSize / sizeof(wchar_t);
+}
+
+int      gfWString_Write     (WString* iString, wchar_t* iSrcBuffer, int iSrcLength)
+{
+	int _LenStep = iSrcLength == -1 ? (int)wcslen(iSrcBuffer) + 1 : iSrcLength;/// - 1;
+	
+	gfWString_Reserve(iString, iString->Length + _LenStep);
+	
+	wcsncpy_s(iString->Data + iString->Length, iSrcLength, iSrcBuffer, _LenStep);
+	
+	iString->Length += _LenStep - 1;
+	
+	return iString->Length;
+}
+int      gfWString_WriteLine (WString* iString, wchar_t* iSrcBuffer, int iSrcLength, int iIndent)
+{
+	STOP;
+	
+	return 0;
+}
+
+	
 DataNodeValue* gfDNValue_AllocNext(DataNodeValue* iValue)
 {
 	DataNodeValue* oNextValue = (DataNodeValue*)malloc(sizeof(DataNodeValue));
@@ -63,25 +121,25 @@ DataNodeValue* gfDNValue_GetNext(DataNodeValue* iValue)
 {
 	return iValue->NextPtr;
 }
-int    gfDNValue_GetI32(DataNodeValue* iValue)
+int      gfDNValue_GetI32(DataNodeValue* iValue)
 {
 	///int oValue = *((int*)iValue->Data);
 	int oValue; dfCastNumberValue(iValue, int);
 	return oValue;
 }
-float  gfDNValue_GetF32(DataNodeValue* iValue)
+float    gfDNValue_GetF32(DataNodeValue* iValue)
 {
 	///float oValue = *((float*)iValue->Data);
 	float oValue; dfCastNumberValue(iValue, float);
 	return oValue;
 }
-double gfDNValue_GetF64(DataNodeValue* iValue)
+double   gfDNValue_GetF64(DataNodeValue* iValue)
 {
 	///double oValue = *((double*)iValue->Data);
 	double oValue; dfCastNumberValue(iValue, double);
 	return oValue;
 }
-void   gfDNValue_GetStr  (DataNodeValue* iValue, char*    iDstBuf, size_t iMaxLen)
+void     gfDNValue_GetStr  (DataNodeValue* iValue, char*    iDstBuf, size_t iMaxLen)
 {
 	//bool _IsWCS = iValue->Type == DN_VT_WString   || iValue->Type == DN_VT_WStringPtr;
 	//bool _IsPtr = iValue->Type == DN_VT_StringPtr || iValue->Type == DN_VT_WStringPtr;
@@ -89,7 +147,7 @@ void   gfDNValue_GetStr  (DataNodeValue* iValue, char*    iDstBuf, size_t iMaxLe
 	//
 	STOP;
 }
-void   gfDNValue_GetWStr (DataNodeValue* iValue, wchar_t* iDstBuf, size_t iMaxLen)
+void     gfDNValue_GetWStr (DataNodeValue* iValue, wchar_t* iDstBuf, size_t iMaxLen)
 {
 	bool _IsWCS = iValue->Type == DN_VT_WString   || iValue->Type == DN_VT_WStringPtr;
 	bool _IsPtr = iValue->Type == DN_VT_StringPtr || iValue->Type == DN_VT_WStringPtr;
@@ -130,7 +188,7 @@ wchar_t* gfDNValue_GetWStrPtr (DataNodeValue* iValue)
 	return oStrPtr;
 }
 
-struct $__DataNodeTypeList__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
+	
 DataNodeTypeList*    gfDNTypeList_Create(wchar_t* iTypeListString)
 {
 	wchar_t* cTypeStr; size_t cStrLenReminder;
@@ -189,7 +247,7 @@ void                 gfDNTypeList_Destroy(DataNodeTypeList* iTypeList)
 	free(iTypeList->Items);
 	free(iTypeList);
 }
-struct $__DataNodeChildren__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
+	
 void                 gfDNChildren_Init     (DataNodeStruct* iParentNode)
 {
 	assert(iParentNode->Children == nullptr);
@@ -268,7 +326,7 @@ void                 gfDNChildren_Clear    (DataNodeStruct* iParentNode)
 }
 
 
-struct $__DataNodeAttributes__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
+	
 void                 gfDNAttributes_Init     (DataNodeStruct* iParentNode)
 {
 	assert(iParentNode->Attributes == nullptr);
@@ -344,7 +402,7 @@ void                 gfDNAttributes_Clear    (DataNodeStruct* iParentNode)
 }
 
 
-struct $__DataNodeStruct__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
+	
 DataNodeStruct* gfDataNode_Create()
 {
 	DataNodeStruct* oNode = malloc(sizeof(DataNodeStruct));
@@ -353,7 +411,7 @@ DataNodeStruct* gfDataNode_Create()
 	
 	return oNode;
 }
-void gfDataNode_Destroy(DataNodeStruct* iNode)
+void            gfDataNode_Destroy(DataNodeStruct* iNode)
 {
 	int cAi,cCi;
 	
@@ -372,6 +430,7 @@ void gfDataNode_Destroy(DataNodeStruct* iNode)
 	HERE;
 }
 
+	
 void gfDataNode_Init_1(DataNodeStruct* iNode)
 {
 	gfDataNode_Init_3(iNode, DN_T_Undefined, DN_VT_Null);
@@ -517,7 +576,8 @@ void gfDataNode_SetNodeValues(DataNodeStruct* iNode, ULSyntaxNode* iListNode, UL
 	HERE;
 }
 
-void gfDataNode_FromULSyntaxNode(DataNodeStruct* iNode, ULSyntaxNode* iSyntaxNode, ULContext* iULC)///, DataNodeType iNodeType)
+	
+void            gfDataNode_FromULSyntaxNode(DataNodeStruct* iNode, ULSyntaxNode* iSyntaxNode, ULContext* iULC)///, DataNodeType iNodeType)
 {
 	if(iSyntaxNode == nullptr) WTFE("Non-null node expected");
 	///if(iSyntaxNode->Children == nullptr || iSyntaxNode->Children->Count == 0) WTFE("Empty node specified");
@@ -774,7 +834,8 @@ DataNodeStruct* gfDataNode_SetNodeByPath(DataNodeStruct* iNode, wchar_t* iPath, 
 }
 
 
-void     gfDataNode_Begin(DataNodeStruct** irNode, wchar_t* iPath)
+	
+void     gfDataNode_Begin         (DataNodeStruct** irNode, wchar_t* iPath)
 {
 	DataNodeStruct* _Node = gfDataNode_GetNodeByPath(*irNode, iPath, false, true);
 	
@@ -830,7 +891,7 @@ void     gfDataNode_Begin(DataNodeStruct** irNode, wchar_t* iPath)
 	/////gfDN
 	/////STOP;
 }
-void     gfDataNode_End(DataNodeStruct** irNode)
+void     gfDataNode_End           (DataNodeStruct** irNode)
 {
 	DataNodeStruct* _Parent = (*irNode)->Parent;
 	assert(_Parent != nullptr);
@@ -840,12 +901,12 @@ void     gfDataNode_End(DataNodeStruct** irNode)
 	HERE;
 }
 
-void     gfDataNode_SetName     (DataNodeStruct* iNode, wchar_t* iName)
+void     gfDataNode_SetName       (DataNodeStruct* iNode, wchar_t* iName)
 {
 	wcsncpy_s((wchar_t*)&iNode->Name, _countof(iNode->Name), iName, _TRUNCATE);
 }
-void     gfDataNode_SetValueSZ  (DataNodeStruct* iNode, wchar_t* iPath, char*    iValue){STOP;}
-void     gfDataNode_SetValueWSZ (DataNodeStruct* iNode, wchar_t* iPath, wchar_t* iValue)
+void     gfDataNode_SetValueSZ    (DataNodeStruct* iNode, wchar_t* iPath, char*    iValue){STOP;}
+void     gfDataNode_SetValueWSZ   (DataNodeStruct* iNode, wchar_t* iPath, wchar_t* iValue)
 {
 	size_t _Len = wcslen(iValue);
 	DataNodeStruct* _TgtNode = gfDataNode_GetNodeByPath(iNode, iPath, true, true);
@@ -869,7 +930,7 @@ void     gfDataNode_SetValueWSZ (DataNodeStruct* iNode, wchar_t* iPath, wchar_t*
 	
 	STOP;
 }
-void     gfDataNode_SetValueI32 (DataNodeStruct* iNode, wchar_t* iPath, int      iValue)
+void     gfDataNode_SetValueI32   (DataNodeStruct* iNode, wchar_t* iPath, int      iValue)
 {
 	DataNodeStruct* _TgtNode = gfDataNode_GetNodeByPath(iNode, iPath, true, true);
 	
@@ -877,7 +938,7 @@ void     gfDataNode_SetValueI32 (DataNodeStruct* iNode, wchar_t* iPath, int     
 	
 	_TgtNode->Value.Type = DN_VT_Int32;
 }
-void     gfDataNode_SetValueF32 (DataNodeStruct* iNode, wchar_t* iPath, float    iValue)
+void     gfDataNode_SetValueF32   (DataNodeStruct* iNode, wchar_t* iPath, float    iValue)
 {
 	DataNodeStruct* _TgtNode = gfDataNode_GetNodeByPath(iNode, iPath, true, true);
 	
@@ -885,7 +946,7 @@ void     gfDataNode_SetValueF32 (DataNodeStruct* iNode, wchar_t* iPath, float   
 	
 	_TgtNode->Value.Type = DN_VT_Float32;
 }
-void     gfDataNode_SetValueF64 (DataNodeStruct* iNode, wchar_t* iPath, double    iValue)
+void     gfDataNode_SetValueF64   (DataNodeStruct* iNode, wchar_t* iPath, double    iValue)
 {
 	DataNodeStruct* _TgtNode = gfDataNode_GetNodeByPath(iNode, iPath, true, true);
 	
@@ -894,7 +955,7 @@ void     gfDataNode_SetValueF64 (DataNodeStruct* iNode, wchar_t* iPath, double  
 	_TgtNode->Value.Type = DN_VT_Float64;
 }
 
-wchar_t* gfDataNode_GetName     (DataNodeStruct* iNode){STOP; return nullptr;}
+wchar_t* gfDataNode_GetName       (DataNodeStruct* iNode){STOP; return nullptr;}
 
 
 void     gfDataNode_GetValuesVA   (DataNodeStruct* iNode, wchar_t* iPath, wchar_t* iFormat, void* iVArgs)
@@ -926,7 +987,7 @@ void     gfDataNode_GetValuesVA   (DataNodeStruct* iNode, wchar_t* iPath, wchar_
 	}
 	gfDNTypeList_Destroy(_Types);
 }
-void     gfDataNode_GetValues   (DataNodeStruct* iNode, wchar_t* iPath, wchar_t* iFormat, ...)
+void     gfDataNode_GetValues     (DataNodeStruct* iNode, wchar_t* iPath, wchar_t* iFormat, ...)
 {
 	va_list _VArgs;
 	va_start(_VArgs, iFormat);
@@ -937,9 +998,9 @@ void     gfDataNode_GetValues   (DataNodeStruct* iNode, wchar_t* iPath, wchar_t*
 }
 
 
-char*    gfDataNode_GetValueSZ  (DataNodeStruct* iNode, wchar_t* iPath){STOP; return nullptr;}
-wchar_t* gfDataNode_GetValueWSZ (DataNodeStruct* iNode, wchar_t* iPath){STOP; return nullptr;}
-int      gfDataNode_GetValueI32 (DataNodeStruct* iNode, wchar_t* iPath)
+char*    gfDataNode_GetValueSZ    (DataNodeStruct* iNode, wchar_t* iPath){STOP; return nullptr;}
+wchar_t* gfDataNode_GetValueWSZ   (DataNodeStruct* iNode, wchar_t* iPath){STOP; return nullptr;}
+int      gfDataNode_GetValueI32   (DataNodeStruct* iNode, wchar_t* iPath)
 {
 	int oValue;
 	DataNodeStruct* _TgtNode = gfDataNode_GetNodeByPath(iNode, iPath, true, false);
@@ -950,7 +1011,7 @@ int      gfDataNode_GetValueI32 (DataNodeStruct* iNode, wchar_t* iPath)
 	
 	return oValue;
 }
-float    gfDataNode_GetValueF32 (DataNodeStruct* iNode, wchar_t* iPath)
+float    gfDataNode_GetValueF32   (DataNodeStruct* iNode, wchar_t* iPath)
 {
 	float oValue;
 	DataNodeStruct* _TgtNode = gfDataNode_GetNodeByPath(iNode, iPath, true, false);
@@ -962,7 +1023,7 @@ float    gfDataNode_GetValueF32 (DataNodeStruct* iNode, wchar_t* iPath)
 	return oValue;
 }
 
-double   gfDataNode_GetValueF64 (DataNodeStruct* iNode, wchar_t* iPath)
+double   gfDataNode_GetValueF64   (DataNodeStruct* iNode, wchar_t* iPath)
 {
 	double oValue;
 	DataNodeStruct* _TgtNode = gfDataNode_GetNodeByPath(iNode, iPath, true, false);
@@ -981,65 +1042,7 @@ int      gfDataNode_GetValueI32Or (DataNodeStruct* iNode, wchar_t* iPath, int   
 float    gfDataNode_GetValueF32Or (DataNodeStruct* iNode, wchar_t* iPath, float    iOrValue){STOP; return -1.0f;}
 double   gfDataNode_GetValueF64Or (DataNodeStruct* iNode, wchar_t* iPath, double   iOrValue){STOP; return -1.0;}
 
-struct $__WString__ooooooooooooooooooooooooooooooooooooooooooooooooooooooo{int i;};
-WString* gfWString_Create(int iInitialCapacity)
-{
-	WString* oStr = malloc(sizeof(WString));
-	{
-		oStr->Data     = nullptr;
-		oStr->Capacity = 0;
-		oStr->Length   = 0;
-		
-		if(iInitialCapacity != 0)
-		{
-			gfWString_Reserve(oStr, iInitialCapacity);
-		}
-	}
-	return oStr;
-}
-void     gfWString_Destroy(WString* iString)
-{
-	if(iString->Data != nullptr)
-	{
-		free(iString->Data);
-	}
-	free(iString);
-}
-
-void gfWString_Reserve(WString* iString, int iNewCapacity)
-{
-	int _NewSize = iNewCapacity * sizeof(wchar_t);
-	
-	wchar_t* _DataNewPtr;
-	
-	if(_NewSize <= iString->Capacity) return;
-	
-	_DataNewPtr = realloc(iString->Data, _NewSize);
-	assert(_DataNewPtr != nullptr);
-	
-	iString->Data     = _DataNewPtr;
-	iString->Capacity = _NewSize / sizeof(wchar_t);
-}
-
-int gfWString_Write(WString* iString, wchar_t* iSrcBuffer, int iSrcLength)
-{
-	int _LenStep = iSrcLength == -1 ? (int)wcslen(iSrcBuffer) + 1 : iSrcLength;/// - 1;
-	
-	gfWString_Reserve(iString, iString->Length + _LenStep);
-	
-	wcsncpy_s(iString->Data + iString->Length, iSrcLength, iSrcBuffer, _LenStep);
-	
-	iString->Length += _LenStep - 1;
-	
-	return iString->Length;
-}
-int gfWString_WriteLine(WString* iString, wchar_t* iSrcBuffer, int iSrcLength, int iIndent)
-{
-	STOP;
-	
-	return 0;
-}
-int gfDataNode_ToString(DataNodeStruct* iNode, WString* iString, int iIndent)
+int      gfDataNode_ToString      (DataNodeStruct* iNode, WString* iString, int iIndent)
 {
 	//if(iBufferCapacity == 0) iBufferCapacity = 64;
 	//if(iBufferSize >= iBufferCapacity - 1)
@@ -1118,9 +1121,10 @@ int gfDataNode_ToString(DataNodeStruct* iNode, WString* iString, int iIndent)
 	return 0;
 }
 
-void gfDataNode_InitStatic()
+void     gfDataNode_InitStatic    ()
 {
 	///memset(&DataNode::Null,0,sizeof(DataNode));
 	
 	
 }
+	
